@@ -1,24 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api, Meta } from "@/lib/api";
+import { api, MetaItem } from "@/lib/api";
 import { mesAtual, formatBRL } from "@/lib/utils";
 
-function barra(atingido: number | null, meta: number): number {
-  if (!atingido || !meta) return 0;
-  return Math.min(100, (atingido / meta) * 100);
-}
+const METRICA_LABEL: Record<string, string> = {
+  receita:    "Receita",
+  comissoes:  "Comissões",
+};
+
+const ESCOPO_LABEL: Record<string, string> = {
+  global:    "Global",
+  equipe:    "Equipe",
+  produtor:  "Produtor",
+  individual:"Individual",
+};
 
 function corBarra(pct: number): string {
   if (pct >= 100) return "#2D9B6F";   // verde MX
   if (pct >= 80)  return "#B5A882";   // khaki MX
-  return "#DC2626";                    // vermelho para alerta
+  return "#DC2626";                    // vermelho alerta
 }
 
 export default function MetasView({ token }: { token: string }) {
   const mes = mesAtual();
   const [competencia, setCompetencia] = useState(mes);
-  const [dados, setDados]   = useState<Meta[]>([]);
+  const [items, setItems]   = useState<MetaItem[]>([]);
   const [erro, setErro]     = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,9 +33,10 @@ export default function MetasView({ token }: { token: string }) {
     setLoading(true);
     setErro("");
     try {
-      setDados(await api.metas(token, competencia));
+      const resp = await api.metas(token, competencia);
+      setItems(resp.items ?? []);
     } catch (e: unknown) {
-      setErro(e instanceof Error ? e.message : "Erro");
+      setErro(e instanceof Error ? e.message : "Erro ao carregar metas");
     } finally {
       setLoading(false);
     }
@@ -55,62 +63,63 @@ export default function MetasView({ token }: { token: string }) {
       </div>
 
       {erro && (
-        <div className="px-4 py-3 rounded-xl text-sm mb-4" style={{ backgroundColor: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", color: "#DC2626" }}>{erro}</div>
+        <div className="px-4 py-3 rounded-xl text-sm mb-4" style={{ backgroundColor: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", color: "#DC2626" }}>
+          {erro}
+        </div>
       )}
 
       {loading ? (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded-2xl animate-pulse" />
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-20 bg-gray-100 rounded-2xl animate-pulse" />
           ))}
         </div>
-      ) : dados.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center text-gray-400">
           Nenhuma meta encontrada para {competencia}
         </div>
       ) : (
-        <div className="space-y-4">
-          {dados.map((m) => {
-            const pctReceita    = barra(m.atingido_receita, m.meta_receita);
-            const pctComissoes  = barra(m.atingido_comissoes, m.meta_comissoes);
+        <div className="space-y-3">
+          {items.map((m, idx) => {
+            const pct = Math.min(100, Number(m.percentual));
             return (
-              <div key={m.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <p className="text-sm font-medium mb-4" style={{ color: "#3E3E3E" }}>{m.competencia}</p>
-                <div className="space-y-4">
-                  {/* Receita */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="font-medium" style={{ color: "#0C1934" }}>Receita</span>
-                      <span style={{ color: "#3E3E3E" }}>
-                        {m.atingido_receita != null ? formatBRL(m.atingido_receita) : "—"}
-                        <span className="text-gray-400 ml-1">/ {formatBRL(m.meta_receita)}</span>
-                      </span>
-                    </div>
-                    <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${pctReceita}%`, backgroundColor: corBarra(pctReceita) }}
-                      />
-                    </div>
-                    <p className="text-xs text-right text-gray-400 mt-0.5">{pctReceita.toFixed(1)}%</p>
+              <div key={`${m.meta_id}-${m.metrica}-${idx}`} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: "#EEF4FA", color: "#0C1934" }}
+                    >
+                      {ESCOPO_LABEL[m.escopo] ?? m.escopo}
+                    </span>
+                    <span className="text-sm font-semibold" style={{ color: "#0C1934" }}>
+                      {METRICA_LABEL[m.metrica] ?? m.metrica}
+                    </span>
                   </div>
-                  {/* Comissões */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="font-medium" style={{ color: "#0C1934" }}>Comissões</span>
-                      <span style={{ color: "#3E3E3E" }}>
-                        {m.atingido_comissoes != null ? formatBRL(m.atingido_comissoes) : "—"}
-                        <span className="text-gray-400 ml-1">/ {formatBRL(m.meta_comissoes)}</span>
-                      </span>
-                    </div>
-                    <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${pctComissoes}%`, backgroundColor: corBarra(pctComissoes) }}
-                      />
-                    </div>
-                    <p className="text-xs text-right text-gray-400 mt-0.5">{pctComissoes.toFixed(1)}%</p>
-                  </div>
+                  <span
+                    className="text-xs font-medium px-2 py-0.5 rounded-full"
+                    style={m.atingida
+                      ? { backgroundColor: "#EEFBF4", color: "#065F46" }
+                      : { backgroundColor: "#F6F6F4", color: "#3E3E3E" }
+                    }
+                  >
+                    {m.atingida ? "✓ Atingida" : `${pct.toFixed(1)}%`}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-sm mb-1.5">
+                  <span style={{ color: "#3E3E3E" }}>Realizado</span>
+                  <span style={{ color: "#3E3E3E" }}>
+                    <strong style={{ color: "#0C1934" }}>{formatBRL(Number(m.valor_atual))}</strong>
+                    <span className="text-gray-400 ml-1">/ {formatBRL(Number(m.valor_alvo))}</span>
+                  </span>
+                </div>
+
+                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${pct}%`, backgroundColor: corBarra(pct) }}
+                  />
                 </div>
               </div>
             );

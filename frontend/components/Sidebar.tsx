@@ -68,8 +68,8 @@ export default function Sidebar({ userEmail, userRole }: SidebarProps) {
           <Image
             src="/logos/logo_03.png"
             alt="MX Seguros"
-            width={130}
-            height={33}
+            width={143}
+            height={36}
             className="object-contain"
           />
         )}

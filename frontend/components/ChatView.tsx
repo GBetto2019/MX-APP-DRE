@@ -70,7 +70,7 @@ export default function ChatView({ token }: { token: string }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ pergunta }),
+        body: JSON.stringify({ mensagem: pergunta }),
       });
 
       if (!resp.ok || !resp.body) {

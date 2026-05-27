@@ -5,6 +5,15 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Extrai mensagem legível de erros FastAPI (detail pode ser array em 422)
+function extrairMensagemErro(err: Record<string, unknown>, status: number): string {
+  if (err.erro && typeof err.erro === "string") return err.erro;
+  if (Array.isArray(err.detail))
+    return err.detail.map((d: { msg?: string }) => d.msg ?? "Erro").join("; ");
+  if (err.detail && typeof err.detail === "string") return err.detail;
+  return `HTTP ${status}`;
+}
+
 // ── Helpers de fetch ──────────────────────────────────────────
 
 async function apiFetch<T>(
@@ -29,7 +38,7 @@ async function apiFetch<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ erro: res.statusText }));
-    throw new Error(err.erro || err.detail || `HTTP ${res.status}`);
+    throw new Error(extrairMensagemErro(err as Record<string, unknown>, res.status));
   }
 
   return res.json();
@@ -52,7 +61,7 @@ async function apiPost<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ erro: res.statusText }));
-    throw new Error(err.erro || err.detail || `HTTP ${res.status}`);
+    throw new Error(extrairMensagemErro(err as Record<string, unknown>, res.status));
   }
 
   return res.json();
@@ -75,7 +84,7 @@ async function apiPut<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ erro: res.statusText }));
-    throw new Error(err.erro || err.detail || `HTTP ${res.status}`);
+    throw new Error(extrairMensagemErro(err as Record<string, unknown>, res.status));
   }
 
   return res.json();
@@ -90,7 +99,7 @@ async function apiDelete(path: string, token: string): Promise<void> {
 
   if (!res.ok && res.status !== 204) {
     const err = await res.json().catch(() => ({ erro: res.statusText }));
-    throw new Error(err.erro || err.detail || `HTTP ${res.status}`);
+    throw new Error(extrairMensagemErro(err as Record<string, unknown>, res.status));
   }
 }
 
@@ -136,13 +145,21 @@ export interface Estorno {
   valor: number;
 }
 
-export interface Meta {
-  id: string;
+// MetaItem espelha MetaItem do backend (atingimento_metas RPC)
+export interface MetaItem {
+  meta_id: string;
+  escopo: string;
+  escopo_id: string | null;
+  metrica: string;        // "receita" | "comissoes"
+  valor_alvo: number;
+  valor_atual: number;
+  percentual: number;
+  atingida: boolean;
+}
+
+export interface MetasApiResponse {
   competencia: string;
-  meta_receita: number;
-  meta_comissoes: number;
-  atingido_receita: number | null;
-  atingido_comissoes: number | null;
+  items: MetaItem[];
 }
 
 export interface Repasse {
@@ -269,8 +286,9 @@ export const api = {
   estornos: (token: string, inicio: string, fim: string) =>
     apiFetch<Estorno[]>("/estornos", token, { inicio, fim }),
 
+  // competencia vem como "YYYY-MM" do input[type=month]; FastAPI exige "YYYY-MM-DD"
   metas: (token: string, competencia: string) =>
-    apiFetch<Meta[]>("/metas", token, { competencia }),
+    apiFetch<MetasApiResponse>("/metas", token, { competencia: `${competencia}-01` }),
 
   repasses: (token: string, inicio: string, fim: string) =>
     apiFetch<Repasse[]>("/repasses", token, { inicio, fim }),
