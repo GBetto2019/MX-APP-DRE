@@ -18,7 +18,7 @@ from app.auth import UsuarioAtual
 from app.models.schemas import (
     ComissaoItem, ComissoesResponse,
     DREResponse, EstornoItem, EstornosResponse,
-    LinhasDRE, MetaItem, MetasResponse,
+    LinhasDRE, MetaItem, MetasResponse, MetaCreate, MetaUpdate, MetaCadastroItem,
     RepasseItem, RepassesResponse,
     ReceitaRamoItem, ReceitaRamoResponse,
 )

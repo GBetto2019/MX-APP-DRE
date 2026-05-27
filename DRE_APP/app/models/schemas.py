@@ -4,12 +4,12 @@ Valores monetários: sempre Decimal, nunca float.
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, EmailStr
 
 
 # ── BASE ──────────────────────────────────────────────────────
@@ -76,6 +76,7 @@ class ComissoesResponse(RespostaBase):
 class EstornoItem(RespostaBase):
     id:                   UUID
     apolice_id:           UUID
+    seguradora_nome:      str | None = None
     valor:                Decimal
     motivo:               str | None
     competencia_original: date
@@ -108,17 +109,72 @@ class MetasResponse(RespostaBase):
     items:       list[MetaItem]
 
 
+class MetaCreate(RespostaBase):
+    escopo:      str          # 'global' | 'equipe' | 'produtor' | 'ramo'
+    escopo_id:   UUID | None = None
+    competencia: date
+    valor_alvo:  Decimal
+    metrica:     str          # 'receita_bruta' | 'comissao_liquida' | 'numero_apolices'
+
+    @field_validator("escopo")
+    @classmethod
+    def escopo_valido(cls, v: str) -> str:
+        validos = {"global", "equipe", "produtor", "ramo"}
+        if v not in validos:
+            raise ValueError(f"escopo deve ser um de: {validos}")
+        return v
+
+    @field_validator("metrica")
+    @classmethod
+    def metrica_valida(cls, v: str) -> str:
+        validas = {"receita_bruta", "comissao_liquida", "numero_apolices"}
+        if v not in validas:
+            raise ValueError(f"metrica deve ser uma de: {validas}")
+        return v
+
+    @field_validator("valor_alvo")
+    @classmethod
+    def valor_positivo(cls, v: Decimal) -> Decimal:
+        if v <= 0:
+            raise ValueError("valor_alvo deve ser positivo")
+        return v
+
+
+class MetaUpdate(RespostaBase):
+    valor_alvo: Decimal | None = None
+    metrica:    str | None = None
+
+    @field_validator("valor_alvo")
+    @classmethod
+    def valor_positivo(cls, v: Decimal | None) -> Decimal | None:
+        if v is not None and v <= 0:
+            raise ValueError("valor_alvo deve ser positivo")
+        return v
+
+
+class MetaCadastroItem(RespostaBase):
+    """Meta retornada em listagens de cadastro (sem valor_atual/percentual)."""
+    id:          UUID
+    escopo:      str
+    escopo_id:   UUID | None
+    competencia: date
+    valor_alvo:  Decimal
+    metrica:     str
+    criado_em:   Any | None = None
+
+
 # ── REPASSES ──────────────────────────────────────────────────
 
 class RepasseItem(RespostaBase):
-    id:           UUID
-    comissao_id:  UUID
-    produtor_id:  UUID
-    valor:        Decimal
-    percentual:   Decimal | None
-    competencia:  date
-    pago_em:      date | None
-    status:       str
+    id:            UUID
+    comissao_id:   UUID
+    produtor_id:   UUID
+    produtor_nome: str | None = None
+    valor:         Decimal
+    percentual:    Decimal | None
+    competencia:   date
+    pago_em:       date | None
+    status:        str
 
 
 class RepassesResponse(RespostaBase):
@@ -204,6 +260,53 @@ class TipoLancamentoUpdate(RespostaBase):
     ativo:      bool | None = None
 
 
+# ── CONFIGURAÇÕES: USUÁRIOS ───────────────────────────────────
+
+class UsuarioItem(RespostaBase):
+    id:          UUID
+    nome:        str
+    email:       str
+    role:        str
+    equipe_id:   UUID | None
+    produtor_id: UUID | None
+    ativo:       bool
+    criado_em:   Any | None = None
+
+
+class UsuarioCreate(RespostaBase):
+    nome:        str
+    email:       str
+    senha:       str
+    role:        str = "comercial"
+    equipe_id:   UUID | None = None
+    produtor_id: UUID | None = None
+
+    @field_validator("role")
+    @classmethod
+    def role_valido(cls, v: str) -> str:
+        validos = {"admin", "gestor", "comercial", "contador"}
+        if v not in validos:
+            raise ValueError(f"role deve ser um de: {validos}")
+        return v
+
+
+class UsuarioUpdate(RespostaBase):
+    nome:        str | None = None
+    role:        str | None = None
+    equipe_id:   UUID | None = None
+    produtor_id: UUID | None = None
+    ativo:       bool | None = None
+
+    @field_validator("role")
+    @classmethod
+    def role_valido(cls, v: str | None) -> str | None:
+        if v is not None:
+            validos = {"admin", "gestor", "comercial", "contador"}
+            if v not in validos:
+                raise ValueError(f"role deve ser um de: {validos}")
+        return v
+
+
 # ── LANÇAMENTOS: DESPESAS ─────────────────────────────────────
 
 class DespesaCreate(RespostaBase):
@@ -238,12 +341,23 @@ class DespesaItem(RespostaBase):
     parcela_atual:      int | None
     parcela_total:      int | None
     criado_em:          Any | None = None
+    # Campos do fluxo de aprovação
+    status:             str = "aprovada"    # 'pendente' | 'aprovada' | 'rejeitada'
+    criado_por:         UUID | None = None
+    aprovado_por:       UUID | None = None
+    aprovado_em:        Any | None = None
+    rejeitado_motivo:   str | None = None
 
 
 class DespesasResponse(RespostaBase):
-    total:      int
-    items:      list[DespesaItem]
-    soma_total: Decimal
+    total:              int
+    items:              list[DespesaItem]
+    soma_total:         Decimal
+    total_pendentes:    int = 0
+
+
+class DespesaAprovacaoRejeicao(RespostaBase):
+    motivo: str | None = None   # obrigatório para rejeição
 
 
 # ── LANÇAMENTOS: RECEITAS ─────────────────────────────────────

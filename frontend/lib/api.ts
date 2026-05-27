@@ -106,8 +106,6 @@ async function apiDelete(path: string, token: string): Promise<void> {
 // ── Tipos: DRE ────────────────────────────────────────────────
 
 export interface LinhasDRE {
-  periodo_inicio: string;
-  periodo_fim: string;
   receita_bruta: number;
   estornos: number;
   impostos: number;
@@ -120,10 +118,29 @@ export interface LinhasDRE {
   resultado_liquido: number | null;
 }
 
+interface DREApiResponse {
+  periodo: { inicio: string; fim: string };
+  dre: LinhasDRE;
+  perfil: string;
+}
+
 export interface ReceitaRamo {
   ramo: string;
   receita: number;
   percentual: number;
+}
+
+interface ReceitaRamoApiItem {
+  ramo_codigo: string;
+  ramo_nome: string;
+  receita_total: number;
+  num_apolices: number;
+}
+
+interface DRERamosApiResponse {
+  periodo: { inicio: string; fim: string };
+  items: ReceitaRamoApiItem[];
+  total: number;
 }
 
 // ── Tipos: Existentes ─────────────────────────────────────────
@@ -168,6 +185,13 @@ export interface Repasse {
   produtor_nome: string;
   valor: number;
   status: string;
+}
+
+interface RepassesApiResponse {
+  total: number;
+  items: Repasse[];
+  soma_previsto: number;
+  soma_pago: number;
 }
 
 // ── Tipos: Configurações ──────────────────────────────────────
@@ -273,11 +297,20 @@ export interface ReceitaCreate {
 
 export const api = {
   // DRE
-  dre: (token: string, inicio: string, fim: string) =>
-    apiFetch<LinhasDRE>("/dre", token, { inicio, fim }),
+  dre: async (token: string, inicio: string, fim: string): Promise<LinhasDRE> => {
+    const resp = await apiFetch<DREApiResponse>("/dre", token, { inicio, fim });
+    return resp.dre;
+  },
 
-  dreRamos: (token: string, inicio: string, fim: string) =>
-    apiFetch<ReceitaRamo[]>("/dre/ramos", token, { inicio, fim }),
+  dreRamos: async (token: string, inicio: string, fim: string): Promise<ReceitaRamo[]> => {
+    const resp = await apiFetch<DRERamosApiResponse>("/dre/ramos", token, { inicio, fim });
+    const total = Number(resp.total) || 1;
+    return (resp.items || []).map((item) => ({
+      ramo: item.ramo_nome,
+      receita: Number(item.receita_total),
+      percentual: (Number(item.receita_total) / total) * 100,
+    }));
+  },
 
   // Existentes
   comissoes: (token: string, inicio: string, fim: string) =>
@@ -290,8 +323,10 @@ export const api = {
   metas: (token: string, competencia: string) =>
     apiFetch<MetasApiResponse>("/metas", token, { competencia: `${competencia}-01` }),
 
-  repasses: (token: string, inicio: string, fim: string) =>
-    apiFetch<Repasse[]>("/repasses", token, { inicio, fim }),
+  repasses: async (token: string, inicio: string, fim: string): Promise<Repasse[]> => {
+    const resp = await apiFetch<RepassesApiResponse>("/repasses", token, { inicio, fim });
+    return resp.items ?? [];
+  },
 
   // Configurações
   configuracoes: {
