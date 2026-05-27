@@ -74,7 +74,7 @@ function ModalDespesa({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">Nova Despesa</h3>
+          <h3 className="font-semibold" style={{ color: "#0C1934" }}>Nova Despesa</h3>
           <button onClick={onFechar} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -198,7 +198,10 @@ function ModalDespesa({
           <button
             onClick={salvar}
             disabled={salvando}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium rounded-xl transition-colors"
+            className="px-6 py-2 disabled:opacity-60 text-white text-sm font-medium rounded-xl transition-colors"
+            style={{ backgroundColor: "#0C1934" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1E3A5F")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0C1934")}
           >
             {salvando ? "Salvando..." : "Salvar"}
           </button>
@@ -263,7 +266,7 @@ function ModalReceita({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">Nova Receita</h3>
+          <h3 className="font-semibold" style={{ color: "#0C1934" }}>Nova Receita</h3>
           <button onClick={onFechar} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -378,7 +381,10 @@ function ModalReceita({
           <button
             onClick={salvar}
             disabled={salvando}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white text-sm font-medium rounded-xl transition-colors"
+            className="px-6 py-2 disabled:opacity-60 text-white text-sm font-medium rounded-xl transition-colors"
+            style={{ backgroundColor: "#0C1934" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1E3A5F")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0C1934")}
           >
             {salvando ? "Salvando..." : "Salvar"}
           </button>
@@ -495,14 +501,17 @@ export default function LancamentosView({ token }: { token: string }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Lançamentos</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Despesas e receitas por centro de custo e banco</p>
+          <h1 className="text-2xl font-bold" style={{ color: "#0C1934" }}>Lançamentos</h1>
+          <p className="text-sm mt-0.5" style={{ color: "#3E3E3E" }}>Despesas e receitas por centro de custo e banco</p>
         </div>
         <div className="flex items-center gap-3">
           <PeriodoPicker inicio={inicio} fim={fim} onInicio={setInicio} onFim={setFim} />
           <button
             onClick={() => setModalAberto(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-xl transition-colors"
+            className="flex items-center gap-2 text-white text-sm px-4 py-2 rounded-xl transition-colors"
+            style={{ backgroundColor: "#0C1934" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1E3A5F")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0C1934")}
           >
             <Plus className="w-4 h-4" />
             Novo
@@ -513,33 +522,33 @@ export default function LancamentosView({ token }: { token: string }) {
       {/* KPIs resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-          <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-            <TrendingDown className="w-5 h-5 text-red-600" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "#FEE2E2" }}>
+            <TrendingDown className="w-5 h-5" style={{ color: "#DC2626" }} />
           </div>
           <div>
             <p className="text-xs text-gray-500">Total Despesas</p>
-            <p className="text-lg font-bold text-red-600">{formatBRL(totalDespesas)}</p>
+            <p className="text-lg font-bold" style={{ color: "#DC2626" }}>{formatBRL(totalDespesas)}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-          <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-green-600" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "#C6F0D8" }}>
+            <TrendingUp className="w-5 h-5" style={{ color: "#065F46" }} />
           </div>
           <div>
             <p className="text-xs text-gray-500">Total Receitas</p>
-            <p className="text-lg font-bold text-green-600">{formatBRL(totalReceitas)}</p>
+            <p className="text-lg font-bold" style={{ color: "#065F46" }}>{formatBRL(totalReceitas)}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-          <div className={cn(
-            "w-10 h-10 rounded-xl flex items-center justify-center",
-            saldo >= 0 ? "bg-blue-100" : "bg-red-100"
-          )}>
-            <DollarSign className={cn("w-5 h-5", saldo >= 0 ? "text-blue-600" : "text-red-600")} />
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: saldo >= 0 ? "#CAE3F2" : "#FEE2E2" }}
+          >
+            <DollarSign className="w-5 h-5" style={{ color: saldo >= 0 ? "#0C1934" : "#DC2626" }} />
           </div>
           <div>
             <p className="text-xs text-gray-500">Saldo do Período</p>
-            <p className={cn("text-lg font-bold", saldo >= 0 ? "text-blue-700" : "text-red-600")}>
+            <p className="text-lg font-bold" style={{ color: saldo >= 0 ? "#0C1934" : "#DC2626" }}>
               {formatBRL(saldo)}
             </p>
           </div>
@@ -610,16 +619,16 @@ export default function LancamentosView({ token }: { token: string }) {
         {aba === "despesas" && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead style={{ backgroundColor: "#F6F6F4", borderBottom: "1px solid #EBEBEB" }}>
                 <tr>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Competência</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Tipo</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Descrição</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Centro</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Banco</th>
-                  <th className="px-4 py-3 text-right text-gray-500 font-medium">Valor</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Pago em</th>
-                  <th className="px-4 py-3 text-right text-gray-500 font-medium"></th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Competência</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Tipo</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Descrição</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Centro</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Banco</th>
+                  <th className="px-4 py-3 text-right font-medium" style={{ color: "#3E3E3E" }}>Valor</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Pago em</th>
+                  <th className="px-4 py-3 text-right font-medium" style={{ color: "#3E3E3E" }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -646,7 +655,7 @@ export default function LancamentosView({ token }: { token: string }) {
                     </td>
                     <td className="px-4 py-3">
                       {d.tipo_nome ? (
-                        <span className="bg-orange-50 text-orange-700 text-xs px-2 py-0.5 rounded-full">{d.tipo_nome}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#FBF7F0", color: "#7C5A1A" }}>{d.tipo_nome}</span>
                       ) : (
                         <span className="text-gray-400 text-xs">{d.categoria ?? "—"}</span>
                       )}
@@ -675,7 +684,7 @@ export default function LancamentosView({ token }: { token: string }) {
                 ))}
               </tbody>
               {despesas && despesas.items.length > 0 && (
-                <tfoot className="bg-gray-50 border-t border-gray-200">
+                <tfoot style={{ backgroundColor: "#F6F6F4", borderTop: "1px solid #EBEBEB" }}>
                   <tr>
                     <td colSpan={5} className="px-4 py-3 text-sm font-semibold text-gray-600">Total</td>
                     <td className="px-4 py-3 text-right font-mono font-bold text-red-600">
@@ -693,17 +702,17 @@ export default function LancamentosView({ token }: { token: string }) {
         {aba === "receitas" && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead style={{ backgroundColor: "#F6F6F4", borderBottom: "1px solid #EBEBEB" }}>
                 <tr>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Competência</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Origem</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Descrição</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Tipo</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Centro</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Banco</th>
-                  <th className="px-4 py-3 text-right text-gray-500 font-medium">Valor</th>
-                  <th className="px-4 py-3 text-left text-gray-500 font-medium">Recebido em</th>
-                  <th className="px-4 py-3 text-right text-gray-500 font-medium"></th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Competência</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Origem</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Descrição</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Tipo</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Centro</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Banco</th>
+                  <th className="px-4 py-3 text-right font-medium" style={{ color: "#3E3E3E" }}>Valor</th>
+                  <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Recebido em</th>
+                  <th className="px-4 py-3 text-right font-medium" style={{ color: "#3E3E3E" }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -729,12 +738,14 @@ export default function LancamentosView({ token }: { token: string }) {
                       {new Date(r.competencia + "T12:00:00").toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                        r.origem === "comissao"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-green-100 text-green-700"
-                      )}>
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                        style={
+                          r.origem === "comissao"
+                            ? { backgroundColor: "#EEF4FA", color: "#0C1934" }
+                            : { backgroundColor: "#EEFBF4", color: "#065F46" }
+                        }
+                      >
                         {r.origem === "comissao" ? "Comissão" : "Manual"}
                       </span>
                     </td>
@@ -767,7 +778,7 @@ export default function LancamentosView({ token }: { token: string }) {
                 ))}
               </tbody>
               {receitas && receitas.items.length > 0 && (
-                <tfoot className="bg-gray-50 border-t border-gray-200">
+                <tfoot style={{ backgroundColor: "#F6F6F4", borderTop: "1px solid #EBEBEB" }}>
                   <tr>
                     <td colSpan={6} className="px-4 py-3 text-sm font-semibold text-gray-600">Total</td>
                     <td className="px-4 py-3 text-right font-mono font-bold text-green-600">

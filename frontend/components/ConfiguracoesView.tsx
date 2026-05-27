@@ -24,6 +24,47 @@ const CATEGORIA_LABEL: Record<string, string> = {
 
 const CATEGORIAS_DRE = Object.keys(CATEGORIA_LABEL);
 
+// Shared input class (without focus ring — using inline style)
+const inputCls = "border rounded-xl px-3 py-2 text-sm outline-none transition-all";
+
+function MxInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className={cn(inputCls, props.className)}
+      style={{ borderColor: "#E5E5E5", color: "#0C1934", ...props.style }}
+      onFocus={(e) => { e.currentTarget.style.borderColor = "#0C1934"; props.onFocus?.(e); }}
+      onBlur={(e) => { e.currentTarget.style.borderColor = "#E5E5E5"; props.onBlur?.(e); }}
+    />
+  );
+}
+
+function MxSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      {...props}
+      className={cn(inputCls, "bg-white", props.className)}
+      style={{ borderColor: "#E5E5E5", color: "#0C1934", ...props.style }}
+      onFocus={(e) => { e.currentTarget.style.borderColor = "#0C1934"; props.onFocus?.(e); }}
+      onBlur={(e) => { e.currentTarget.style.borderColor = "#E5E5E5"; props.onBlur?.(e); }}
+    />
+  );
+}
+
+function AdicionarBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 text-white text-sm px-4 py-2 rounded-xl transition-colors"
+      style={{ backgroundColor: "#0C1934" }}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1E3A5F")}
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0C1934")}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function ConfiguracoesView({ token }: { token: string }) {
   // ── Bancos ────────────────────────────────────────────────
   const [bancos, setBancos]         = useState<Banco[]>([]);
@@ -182,11 +223,14 @@ export default function ConfiguracoesView({ token }: { token: string }) {
     carregarTipos();
   }, [token]);
 
+  const theadStyle: React.CSSProperties = { backgroundColor: "#F6F6F4", borderBottom: "1px solid #EBEBEB" };
+  const thStyle: React.CSSProperties = { color: "#3E3E3E", fontWeight: 500 };
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
-        <p className="text-gray-500 text-sm mt-0.5">
+        <h1 className="text-2xl font-bold" style={{ color: "#0C1934" }}>Configurações</h1>
+        <p className="text-sm mt-0.5" style={{ color: "#3E3E3E" }}>
           Parâmetros do sistema — exclusivo para Administrador
         </p>
       </div>
@@ -194,40 +238,37 @@ export default function ConfiguracoesView({ token }: { token: string }) {
       {/* ── BANCOS ─────────────────────────────────────────── */}
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="font-semibold text-gray-800">Bancos</h2>
+          <h2 className="font-semibold" style={{ color: "#0C1934" }}>Bancos</h2>
           <span className="text-xs text-gray-400">{bancos.length} registros</span>
         </div>
 
         {erroBancos && (
-          <div className="mx-6 mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm">
+          <div className="mx-6 mt-4 px-4 py-2 rounded-xl text-sm" style={{ backgroundColor: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", color: "#DC2626" }}>
             {erroBancos}
           </div>
         )}
 
         {/* Form adicionar */}
         <div className="px-6 pt-4 pb-2 flex gap-2">
-          <input
+          <MxInput
             type="text"
             placeholder="Nome do banco"
             value={novoBanco}
             onChange={e => setNovoBanco(e.target.value)}
             onKeyDown={e => e.key === "Enter" && salvarBanco()}
-            className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1"
           />
-          <button
-            onClick={salvarBanco}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-xl transition-colors"
-          >
+          <AdicionarBtn onClick={salvarBanco}>
             <Plus className="w-4 h-4" /> Adicionar
-          </button>
+          </AdicionarBtn>
         </div>
 
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
+          <thead style={theadStyle}>
             <tr>
-              <th className="px-6 py-3 text-left text-gray-500 font-medium">Nome</th>
-              <th className="px-6 py-3 text-left text-gray-500 font-medium">Status</th>
-              <th className="px-6 py-3 text-right text-gray-500 font-medium">Ações</th>
+              <th className="px-6 py-3 text-left" style={thStyle}>Nome</th>
+              <th className="px-6 py-3 text-left" style={thStyle}>Status</th>
+              <th className="px-6 py-3 text-right" style={thStyle}>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -239,24 +280,27 @@ export default function ConfiguracoesView({ token }: { token: string }) {
               <tr key={b.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="px-6 py-3">
                   {editBanco?.id === b.id ? (
-                    <input
+                    <MxInput
                       type="text"
                       value={editBanco.nome}
                       onChange={e => setEditBanco({ ...editBanco, nome: e.target.value })}
-                      className="border border-blue-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+                      className="w-48"
                       autoFocus
                     />
                   ) : (
-                    <span className={cn("text-gray-700", !b.ativo && "text-gray-400 line-through")}>
+                    <span className={cn(!b.ativo ? "text-gray-400 line-through" : "")} style={b.ativo ? { color: "#0C1934" } : undefined}>
                       {b.nome}
                     </span>
                   )}
                 </td>
                 <td className="px-6 py-3">
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                    b.ativo ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                  )}>
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={b.ativo
+                      ? { backgroundColor: "#EEFBF4", color: "#065F46" }
+                      : { backgroundColor: "#F3F4F6", color: "#6B7280" }
+                    }
+                  >
                     {b.ativo ? "Ativo" : "Inativo"}
                   </span>
                 </td>
@@ -264,7 +308,7 @@ export default function ConfiguracoesView({ token }: { token: string }) {
                   <div className="flex items-center justify-end gap-2">
                     {editBanco?.id === b.id ? (
                       <>
-                        <button onClick={confirmarEditBanco} className="text-green-600 hover:text-green-700">
+                        <button onClick={confirmarEditBanco} style={{ color: "#065F46" }}>
                           <Check className="w-4 h-4" />
                         </button>
                         <button onClick={() => setEditBanco(null)} className="text-gray-400 hover:text-gray-600">
@@ -275,13 +319,13 @@ export default function ConfiguracoesView({ token }: { token: string }) {
                       <>
                         <button
                           onClick={() => setEditBanco({ id: b.id, nome: b.nome })}
-                          className="text-blue-500 hover:text-blue-700"
+                          style={{ color: "#1E3A5F" }}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => toggleAtivoBanco(b)}
-                          className={cn(b.ativo ? "text-red-400 hover:text-red-600" : "text-green-500 hover:text-green-700")}
+                          style={{ color: b.ativo ? "#DC2626" : "#065F46" }}
                           title={b.ativo ? "Desativar" : "Ativar"}
                         >
                           <Power className="w-4 h-4" />
@@ -299,46 +343,43 @@ export default function ConfiguracoesView({ token }: { token: string }) {
       {/* ── CENTROS DE CUSTO ──────────────────────────────── */}
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="font-semibold text-gray-800">Centros de Custo</h2>
+          <h2 className="font-semibold" style={{ color: "#0C1934" }}>Centros de Custo</h2>
           <span className="text-xs text-gray-400">{centros.length} registros</span>
         </div>
 
         {erroCentros && (
-          <div className="mx-6 mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm">
+          <div className="mx-6 mt-4 px-4 py-2 rounded-xl text-sm" style={{ backgroundColor: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", color: "#DC2626" }}>
             {erroCentros}
           </div>
         )}
 
         <div className="px-6 pt-4 pb-2 flex gap-2">
-          <input
+          <MxInput
             type="text"
             placeholder="Nome (ex: Filial SP)"
             value={novoCentro.nome}
             onChange={e => setNovoCentro(prev => ({ ...prev, nome: e.target.value }))}
-            className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1"
           />
-          <input
+          <MxInput
             type="text"
             placeholder="Código (ex: filial_sp)"
             value={novoCentro.codigo}
             onChange={e => setNovoCentro(prev => ({ ...prev, codigo: e.target.value }))}
-            className="w-40 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-40"
           />
-          <button
-            onClick={salvarCentro}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-xl transition-colors"
-          >
+          <AdicionarBtn onClick={salvarCentro}>
             <Plus className="w-4 h-4" /> Adicionar
-          </button>
+          </AdicionarBtn>
         </div>
 
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
+          <thead style={theadStyle}>
             <tr>
-              <th className="px-6 py-3 text-left text-gray-500 font-medium">Nome</th>
-              <th className="px-6 py-3 text-left text-gray-500 font-medium">Código</th>
-              <th className="px-6 py-3 text-left text-gray-500 font-medium">Status</th>
-              <th className="px-6 py-3 text-right text-gray-500 font-medium">Ações</th>
+              <th className="px-6 py-3 text-left" style={thStyle}>Nome</th>
+              <th className="px-6 py-3 text-left" style={thStyle}>Código</th>
+              <th className="px-6 py-3 text-left" style={thStyle}>Status</th>
+              <th className="px-6 py-3 text-right" style={thStyle}>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -350,27 +391,30 @@ export default function ConfiguracoesView({ token }: { token: string }) {
               <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="px-6 py-3">
                   {editCentro?.id === c.id ? (
-                    <input
+                    <MxInput
                       type="text"
                       value={editCentro.nome}
                       onChange={e => setEditCentro({ ...editCentro, nome: e.target.value })}
-                      className="border border-blue-300 rounded-lg px-2 py-1 text-sm focus:outline-none w-48"
+                      className="w-48"
                       autoFocus
                     />
                   ) : (
-                    <span className={cn("text-gray-700", !c.ativo && "text-gray-400 line-through")}>
+                    <span className={cn(!c.ativo ? "text-gray-400 line-through" : "")} style={c.ativo ? { color: "#0C1934" } : undefined}>
                       {c.nome}
                     </span>
                   )}
                 </td>
                 <td className="px-6 py-3">
-                  <code className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">{c.codigo}</code>
+                  <code className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: "#F6F6F4", color: "#3E3E3E" }}>{c.codigo}</code>
                 </td>
                 <td className="px-6 py-3">
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                    c.ativo ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                  )}>
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={c.ativo
+                      ? { backgroundColor: "#EEFBF4", color: "#065F46" }
+                      : { backgroundColor: "#F3F4F6", color: "#6B7280" }
+                    }
+                  >
                     {c.ativo ? "Ativo" : "Inativo"}
                   </span>
                 </td>
@@ -378,7 +422,7 @@ export default function ConfiguracoesView({ token }: { token: string }) {
                   <div className="flex items-center justify-end gap-2">
                     {editCentro?.id === c.id ? (
                       <>
-                        <button onClick={confirmarEditCentro} className="text-green-600 hover:text-green-700">
+                        <button onClick={confirmarEditCentro} style={{ color: "#065F46" }}>
                           <Check className="w-4 h-4" />
                         </button>
                         <button onClick={() => setEditCentro(null)} className="text-gray-400 hover:text-gray-600">
@@ -389,13 +433,13 @@ export default function ConfiguracoesView({ token }: { token: string }) {
                       <>
                         <button
                           onClick={() => setEditCentro({ id: c.id, nome: c.nome })}
-                          className="text-blue-500 hover:text-blue-700"
+                          style={{ color: "#1E3A5F" }}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => toggleAtivoCentro(c)}
-                          className={cn(c.ativo ? "text-red-400 hover:text-red-600" : "text-green-500 hover:text-green-700")}
+                          style={{ color: c.ativo ? "#DC2626" : "#065F46" }}
                         >
                           <Power className="w-4 h-4" />
                         </button>
@@ -412,72 +456,66 @@ export default function ConfiguracoesView({ token }: { token: string }) {
       {/* ── TIPOS DE LANÇAMENTO ───────────────────────────── */}
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="font-semibold text-gray-800">Tipos de Lançamento</h2>
+          <h2 className="font-semibold" style={{ color: "#0C1934" }}>Tipos de Lançamento</h2>
           <span className="text-xs text-gray-400">{tipos.length} registros</span>
         </div>
 
         {erroTipos && (
-          <div className="mx-6 mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm">
+          <div className="mx-6 mt-4 px-4 py-2 rounded-xl text-sm" style={{ backgroundColor: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", color: "#DC2626" }}>
             {erroTipos}
           </div>
         )}
 
         {/* Form novo tipo */}
         <div className="px-6 pt-4 pb-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
-          <input
+          <MxInput
             type="text"
             placeholder="Nome do tipo"
             value={novoTipo.nome}
             onChange={e => setNovoTipo(prev => ({ ...prev, nome: e.target.value }))}
-            className="lg:col-span-2 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="lg:col-span-2"
           />
-          <select
+          <MxSelect
             value={novoTipo.natureza}
             onChange={e => setNovoTipo(prev => ({ ...prev, natureza: e.target.value as "despesa" | "receita" }))}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             <option value="despesa">Despesa</option>
             <option value="receita">Receita</option>
-          </select>
+          </MxSelect>
           {novoTipo.natureza === "despesa" && (
             <>
-              <select
+              <MxSelect
                 value={novoTipo.custo_tipo}
                 onChange={e => setNovoTipo(prev => ({ ...prev, custo_tipo: e.target.value }))}
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="fixo">Custo Fixo</option>
                 <option value="variavel">Custo Variável</option>
                 <option value="nao_operacional">Não Operacional</option>
-              </select>
-              <select
+              </MxSelect>
+              <MxSelect
                 value={novoTipo.categoria}
                 onChange={e => setNovoTipo(prev => ({ ...prev, categoria: e.target.value }))}
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="">Categoria DRE (opcional)</option>
                 {CATEGORIAS_DRE.map(cat => (
                   <option key={cat} value={cat}>{CATEGORIA_LABEL[cat]}</option>
                 ))}
-              </select>
+              </MxSelect>
             </>
           )}
-          <button
-            onClick={salvarTipo}
-            className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-xl transition-colors"
-          >
+          <AdicionarBtn onClick={salvarTipo}>
             <Plus className="w-4 h-4" /> Adicionar
-          </button>
+          </AdicionarBtn>
         </div>
 
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
+          <thead style={theadStyle}>
             <tr>
-              <th className="px-6 py-3 text-left text-gray-500 font-medium">Nome</th>
-              <th className="px-6 py-3 text-left text-gray-500 font-medium">Natureza</th>
-              <th className="px-6 py-3 text-left text-gray-500 font-medium">Tipo de Custo</th>
-              <th className="px-6 py-3 text-left text-gray-500 font-medium">Categoria DRE</th>
-              <th className="px-6 py-3 text-right text-gray-500 font-medium">Ativo</th>
+              <th className="px-6 py-3 text-left" style={thStyle}>Nome</th>
+              <th className="px-6 py-3 text-left" style={thStyle}>Natureza</th>
+              <th className="px-6 py-3 text-left" style={thStyle}>Tipo de Custo</th>
+              <th className="px-6 py-3 text-left" style={thStyle}>Categoria DRE</th>
+              <th className="px-6 py-3 text-right" style={thStyle}>Ativo</th>
             </tr>
           </thead>
           <tbody>
@@ -488,29 +526,32 @@ export default function ConfiguracoesView({ token }: { token: string }) {
             ) : tipos.map(t => (
               <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="px-6 py-3">
-                  <span className={cn("text-gray-700", !t.ativo && "text-gray-400 line-through")}>{t.nome}</span>
+                  <span className={cn(!t.ativo ? "text-gray-400 line-through" : "")} style={t.ativo ? { color: "#0C1934" } : undefined}>
+                    {t.nome}
+                  </span>
                 </td>
                 <td className="px-6 py-3">
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-                    t.natureza === "despesa" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
-                  )}>
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={
+                      t.natureza === "despesa"
+                        ? { backgroundColor: "#FEF2F2", color: "#DC2626" }
+                        : { backgroundColor: "#EEF4FA", color: "#0C1934" }
+                    }
+                  >
                     {t.natureza === "despesa" ? "Despesa" : "Receita"}
                   </span>
                 </td>
-                <td className="px-6 py-3 text-gray-600">
+                <td className="px-6 py-3" style={{ color: "#3E3E3E" }}>
                   {t.custo_tipo ? CUSTO_TIPO_LABEL[t.custo_tipo] : "—"}
                 </td>
-                <td className="px-6 py-3 text-gray-600">
+                <td className="px-6 py-3" style={{ color: "#3E3E3E" }}>
                   {t.categoria ? CATEGORIA_LABEL[t.categoria] ?? t.categoria : "—"}
                 </td>
                 <td className="px-6 py-3 text-right">
                   <button
                     onClick={() => toggleAtivoTipo(t)}
-                    className={cn(
-                      "transition-colors",
-                      t.ativo ? "text-red-400 hover:text-red-600" : "text-green-500 hover:text-green-700"
-                    )}
+                    style={{ color: t.ativo ? "#DC2626" : "#065F46" }}
                     title={t.ativo ? "Desativar" : "Ativar"}
                   >
                     <Power className="w-4 h-4" />

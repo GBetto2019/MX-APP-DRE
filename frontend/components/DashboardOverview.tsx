@@ -50,13 +50,16 @@ export default function DashboardOverview({ token }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Visão Geral</h1>
-          <p className="text-gray-500 text-sm mt-0.5 capitalize">{mesLabel}</p>
+          <h1 className="text-2xl font-bold" style={{ color: "#0C1934" }}>Visão Geral</h1>
+          <p className="text-sm mt-0.5 capitalize" style={{ color: "#3E3E3E" }}>{mesLabel}</p>
         </div>
         <button
           onClick={carregar}
           disabled={carregando}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-2 text-sm text-gray-500 transition-colors"
+          style={{ color: "#3E3E3E" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#0C1934")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#3E3E3E")}
         >
           <RefreshCw className={`w-4 h-4 ${carregando ? "animate-spin" : ""}`} />
           Atualizar

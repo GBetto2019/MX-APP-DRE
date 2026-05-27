@@ -26,7 +26,7 @@ export default async function DashboardLayout({
   const userRole = perfil?.role ?? "comercial";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#F6F6F4" }}>
       <Sidebar userEmail={user.email ?? ""} userRole={userRole} />
       <main className="flex-1 overflow-y-auto">
         <div className="p-6 max-w-7xl mx-auto">{children}</div>

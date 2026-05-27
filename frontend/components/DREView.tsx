@@ -18,7 +18,8 @@ import { api, LinhasDRE, ReceitaRamo } from "@/lib/api";
 import { mesAtual, primeiroDia, ultimoDia, formatBRL } from "@/lib/utils";
 import PeriodoPicker from "@/components/PeriodoPicker";
 
-const CORES_RAMO = ["#3B82F6","#10B981","#F59E0B","#EF4444","#8B5CF6","#EC4899","#06B6D4"];
+// MX Seguros brand palette for charts
+const CORES_RAMO = ["#0C1934","#CAE3F2","#B5A882","#1E3A5F","#4A7FA5","#8B7355","#6B9BC0"];
 
 const LINHAS_DRE: { key: keyof LinhasDRE; label: string; destaque?: boolean; negativo?: boolean }[] = [
   { key: "receita_bruta",            label: "Receita Bruta",              destaque: true },
@@ -66,7 +67,7 @@ export default function DREView({ token }: { token: string }) {
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">DRE</h1>
+        <h1 className="text-2xl font-bold" style={{ color: "#0C1934" }}>DRE</h1>
         <PeriodoPicker
           inicio={inicio} fim={fim}
           onInicio={setInicio} onFim={setFim}
@@ -81,7 +82,7 @@ export default function DREView({ token }: { token: string }) {
         {/* Tabela DRE */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800">Demonstração de Resultados</h2>
+            <h2 className="font-semibold" style={{ color: "#0C1934" }}>Demonstração de Resultados</h2>
           </div>
           <div className="p-1">
             {loading ? (
@@ -98,16 +99,21 @@ export default function DREView({ token }: { token: string }) {
                     return (
                       <tr
                         key={key}
-                        className={destaque ? "bg-blue-50" : "hover:bg-gray-50"}
+                        style={destaque ? { backgroundColor: "#EEF4FA" } : undefined}
+                        className={destaque ? "" : "hover:bg-gray-50"}
                       >
-                        <td className={`px-5 py-2.5 ${destaque ? "font-semibold text-gray-800" : "text-gray-600 pl-8"}`}>
+                        <td
+                          className={`px-5 py-2.5 ${destaque ? "font-semibold pl-5" : "text-gray-600 pl-8"}`}
+                          style={destaque ? { color: "#0C1934" } : undefined}
+                        >
                           {label}
                         </td>
                         <td className={`px-5 py-2.5 text-right font-mono ${
                           valor == null ? "text-gray-300" :
-                          negativo ? "text-red-600" :
-                          destaque ? "text-blue-700 font-semibold" : "text-gray-700"
-                        }`}>
+                          negativo ? "text-red-600" : "text-gray-700"
+                        } ${destaque ? "font-semibold" : ""}`}
+                          style={destaque && valor != null && !negativo ? { color: "#0C1934" } : undefined}
+                        >
                           {valor == null ? "—" : formatBRL(valor)}
                         </td>
                       </tr>
@@ -122,7 +128,7 @@ export default function DREView({ token }: { token: string }) {
         {/* Gráfico de ramos */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800">Receita por Ramo</h2>
+            <h2 className="font-semibold" style={{ color: "#0C1934" }}>Receita por Ramo</h2>
           </div>
           <div className="p-4 h-80">
             {loading ? (

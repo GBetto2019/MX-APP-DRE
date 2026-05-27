@@ -34,9 +34,9 @@ export default function EstornosView({ token }: { token: string }) {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Estornos</h1>
+          <h1 className="text-2xl font-bold" style={{ color: "#0C1934" }}>Estornos</h1>
           {dados.length > 0 && (
-            <p className="text-sm text-red-600 font-medium mt-0.5">
+            <p className="text-sm font-medium mt-0.5" style={{ color: "#DC2626" }}>
               Total: {formatBRL(total)}
             </p>
           )}
@@ -45,17 +45,17 @@ export default function EstornosView({ token }: { token: string }) {
       </div>
 
       {erro && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">{erro}</div>
+        <div className="px-4 py-3 rounded-xl text-sm mb-4" style={{ backgroundColor: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", color: "#DC2626" }}>{erro}</div>
       )}
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
+          <thead style={{ backgroundColor: "#F6F6F4", borderBottom: "1px solid #EBEBEB" }}>
             <tr>
-              <th className="px-4 py-3 text-left text-gray-500 font-medium">Competência</th>
-              <th className="px-4 py-3 text-left text-gray-500 font-medium">Seguradora</th>
-              <th className="px-4 py-3 text-left text-gray-500 font-medium">Motivo</th>
-              <th className="px-4 py-3 text-right text-gray-500 font-medium">Valor</th>
+              <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Competência</th>
+              <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Seguradora</th>
+              <th className="px-4 py-3 text-left font-medium" style={{ color: "#3E3E3E" }}>Motivo</th>
+              <th className="px-4 py-3 text-right font-medium" style={{ color: "#3E3E3E" }}>Valor</th>
             </tr>
           </thead>
           <tbody>
@@ -66,10 +66,10 @@ export default function EstornosView({ token }: { token: string }) {
             ) : (
               dados.map((e) => (
                 <tr key={e.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-700">{e.competencia}</td>
-                  <td className="px-4 py-3 text-gray-700">{e.seguradora}</td>
-                  <td className="px-4 py-3 text-gray-600 max-w-xs truncate">{e.motivo}</td>
-                  <td className="px-4 py-3 text-right font-mono text-red-600">{formatBRL(e.valor)}</td>
+                  <td className="px-4 py-3" style={{ color: "#3E3E3E" }}>{e.competencia}</td>
+                  <td className="px-4 py-3 font-medium" style={{ color: "#0C1934" }}>{e.seguradora}</td>
+                  <td className="px-4 py-3 max-w-xs truncate" style={{ color: "#3E3E3E" }}>{e.motivo}</td>
+                  <td className="px-4 py-3 text-right font-mono" style={{ color: "#DC2626" }}>{formatBRL(e.valor)}</td>
                 </tr>
               ))
             )}

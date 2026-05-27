@@ -167,8 +167,8 @@ export default function ChatView({ token }: { token: string }) {
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)]">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Assistente IA</h1>
-        <p className="text-gray-500 text-sm mt-0.5">
+        <h1 className="text-2xl font-bold" style={{ color: "#0C1934" }}>Assistente IA</h1>
+        <p className="text-sm mt-0.5" style={{ color: "#3E3E3E" }}>
           Análises inteligentes do seu DRE — pergunte em português
         </p>
       </div>
@@ -185,12 +185,12 @@ export default function ChatView({ token }: { token: string }) {
           >
             {/* Avatar */}
             <div
-              className={cn(
-                "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
+              className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+              style={
                 msg.role === "assistant"
-                  ? "bg-blue-100 text-blue-600"
-                  : "bg-gray-200 text-gray-600"
-              )}
+                  ? { backgroundColor: "#CAE3F2", color: "#0C1934" }
+                  : { backgroundColor: "#E8E2D9", color: "#3E3E3E" }
+              }
             >
               {msg.role === "assistant" ? (
                 <Bot className="w-4 h-4" />
@@ -201,14 +201,14 @@ export default function ChatView({ token }: { token: string }) {
 
             {/* Balão */}
             <div
-              className={cn(
-                "max-w-[75%] rounded-2xl px-4 py-3 text-sm",
+              className={cn("max-w-[75%] rounded-2xl px-4 py-3 text-sm")}
+              style={
                 msg.role === "user"
-                  ? "bg-blue-600 text-white"
+                  ? { backgroundColor: "#0C1934", color: "#CAE3F2" }
                   : msg.erro
-                  ? "bg-red-50 text-red-700 border border-red-200"
-                  : "bg-white text-gray-800 border border-gray-100 shadow-sm"
-              )}
+                  ? { backgroundColor: "rgba(239,68,68,0.07)", color: "#DC2626", border: "1px solid rgba(239,68,68,0.2)" }
+                  : { backgroundColor: "#FFFFFF", color: "#3E3E3E", border: "1px solid #EBEBEB", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }
+              }
             >
               {msg.role === "assistant" && msg.content === "" && !msg.erro ? (
                 <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
@@ -227,7 +227,8 @@ export default function ChatView({ token }: { token: string }) {
                   {msg.tools.map((t) => (
                     <span
                       key={t}
-                      className="inline-flex items-center gap-1 bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full"
+                      className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: "#EEF4FA", color: "#0C1934" }}
                     >
                       <Wrench className="w-3 h-3" />
                       {t}
@@ -242,10 +243,16 @@ export default function ChatView({ token }: { token: string }) {
         {/* Indicador de tool em execução */}
         {toolAtiva && (
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+            <div
+              className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: "#CAE3F2", color: "#0C1934" }}
+            >
               <Bot className="w-4 h-4" />
             </div>
-            <div className="bg-white border border-blue-100 rounded-2xl px-4 py-3 text-sm text-blue-600 flex items-center gap-2 shadow-sm">
+            <div
+              className="rounded-2xl px-4 py-3 text-sm flex items-center gap-2 shadow-sm"
+              style={{ backgroundColor: "#EEF4FA", color: "#0C1934", border: "1px solid #CAE3F2" }}
+            >
               <Loader2 className="w-4 h-4 animate-spin" />
               Consultando <strong>{toolAtiva}</strong>...
             </div>
@@ -256,7 +263,7 @@ export default function ChatView({ token }: { token: string }) {
       </div>
 
       {/* Input */}
-      <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-sm flex items-end gap-2 p-3">
+      <div className="mt-4 bg-white rounded-2xl shadow-sm flex items-end gap-2 p-3" style={{ border: "1px solid #E5E5E5" }}>
         <textarea
           ref={textareaRef}
           value={input}
@@ -265,13 +272,16 @@ export default function ChatView({ token }: { token: string }) {
           rows={1}
           placeholder="Pergunte sobre o DRE, estornos, metas... (Enter para enviar)"
           disabled={enviando}
-          className="flex-1 resize-none bg-transparent text-sm text-gray-800 placeholder-gray-400 focus:outline-none max-h-32 leading-relaxed"
-          style={{ minHeight: "2rem" }}
+          className="flex-1 resize-none bg-transparent text-sm placeholder-gray-400 focus:outline-none max-h-32 leading-relaxed"
+          style={{ color: "#0C1934", minHeight: "2rem" }}
         />
         <button
           onClick={enviar}
           disabled={enviando || !input.trim()}
-          className="flex-shrink-0 w-9 h-9 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 rounded-xl flex items-center justify-center transition-colors"
+          className="flex-shrink-0 w-9 h-9 disabled:opacity-40 rounded-xl flex items-center justify-center transition-all"
+          style={{ backgroundColor: "#0C1934" }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1E3A5F")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0C1934")}
         >
           {enviando ? (
             <Loader2 className="w-4 h-4 text-white animate-spin" />
