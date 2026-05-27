@@ -1,0 +1,36 @@
+# Ambiente
+.env
+.env.local
+.env.test
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+.mypy_cache/
+.ruff_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+pnpm-lock.yaml
+
+# Dados sensíveis (nunca commitar planilhas)
+data/uploads/
+*.xlsx
+*.xls
+*.csv
+!etl/categorizacao_exemplo.csv
+
+# Supabase local
+.supabase/
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
