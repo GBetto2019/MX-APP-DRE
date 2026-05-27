@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Hub MX Seguros - Gestão 360 Full</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --mx-navy: #0e1b47;
+            --mx-gold: #c5a059; 
+            --mx-gold-light: #e2c275;
+            --mx-silver: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.03);
+            --neon-blue: #00f2ff;
+        }
+        body { background-color: var(--mx-navy); color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
+        
+        /* Sidebar & Navigation */
+        .sidebar-item { border-left: 3px solid transparent; transition: 0.3s; color: var(--mx-silver); font-size: 13px; }
+        .sidebar-item:hover { background: rgba(197, 160, 89, 0.08); color: var(--mx-gold-light); }
+        .sidebar-active { background: rgba(197, 160, 89, 0.12); border-left-color: var(--mx-gold); color: var(--mx-gold); font-weight: 600; }
+        
+        .card-mx { background: var(--glass); border: 1px solid rgba(197, 160, 89, 0.15); border-radius: 12px; backdrop-filter: blur(15px); transition: 0.3s; }
+        .card-mx:hover { border-color: var(--mx-gold-light); }
+        
+        /* Post-its Operacionais (8 Estágios) */
+        .postit-container { display: flex; gap: 0.75rem; height: 60vh; overflow-x: auto; padding: 1rem 0; }
+        .postit { 
+            flex: 1; min-width: 130px; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+            position: relative; overflow: hidden;
+        }
+        .postit.active { flex: 7; min-width: 450px; background: rgba(197, 160, 89, 0.03); border-color: var(--mx-gold); }
+        .postit.collapsed { flex: 0.15; min-width: 50px; opacity: 0.4; cursor: pointer; }
+        .postit-title-vert { display: none; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--mx-gold); white-space: nowrap; }
+        .postit.collapsed .postit-title-vert { display: block; padding-top: 2rem; margin: 0 auto; }
+        .postit.collapsed .postit-content { display: none; }
+
+        /* Typography & Components */
+        .gold-gradient { background: linear-gradient(135deg, var(--mx-gold), var(--mx-gold-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-gold { background: var(--mx-gold); color: var(--mx-navy); font-weight: 700; transition: 0.3s; }
+        .badge-status { padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        
+        ::-webkit-scrollbar { width: 4px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--mx-gold); border-radius: 10px; }
+    </style>
+</head>
+<body class="flex h-screen">
+
+    <aside class="w-72 border-r border-white/5 flex flex-col shrink-0 bg-[#020610]">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold tracking-tighter">MX<span class="text-[var(--mx-gold)]">SEGUROS</span></h1>
+            <p class="text-[9px] text-slate-500 tracking-[0.4em] uppercase mt-1">Plataforma Integrada</p>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+            <p class="px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Estratégico</p>
+            <button onclick="showPage('home')" class="sidebar-item w-full flex items-center p-3 rounded-lg sidebar-active"><i class="fas fa-microchip w-8"></i> Dash 360º / Nexus</button>
+            <button onclick="showPage('comercial')" class="sidebar-item w-full flex items-center p-3 rounded-lg"><i class="fas fa-funnel-dollar w-8"></i> Comercial / CRM</button>
+            
+            <p class="px-4 py-2 mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Operacional</p>
+            <button onclick="showPage('sinistro')" class="sidebar-item w-full flex items-center p-3 rounded-lg"><i class="fas fa-ambulance w-8"></i> Sinistro / 24h</button>
+            <button onclick="showPage('financeiro')" class="sidebar-item w-full flex items-center p-3 rounded-lg"><i class="fas fa-wallet w-8"></i> Financeiro / DRE</button>
+            <button onclick="showPage('emissao')" class="sidebar-item w-full flex items-center p-3 rounded-lg"><i class="fas fa-file-signature w-8"></i> Emissão / C.I.C</button>
+            
+            <p class="px-4 py-2 mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ativos & Marca</p>
+            <button onclick="showPage('marketing')" class="sidebar-item w-full flex items-center p-3 rounded-lg"><i class="fas fa-hashtag w-8"></i> Marketing / Canais</button>
+            <button onclick="showPage('rh')" class="sidebar-item w-full flex items-center p-3 rounded-lg"><i class="fas fa-users-gear w-8"></i> Pessoas / Jornada</button>
+        </nav>
+
+        <div class="p-6 border-t border-white/5 bg-black/20">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-300 flex items-center justify-center font-bold text-navy-900">YN</div>
+                <div>
+                    <p class="text-xs font-bold">Yuri Neves</p>
+                    <p class="text-[9px] text-amber-500 font-bold uppercase tracking-tighter">Gestor / Mago do Excel</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+        
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h2 id="page-title" class="text-3xl font-light tracking-tight">Visão <span class="font-bold gold-gradient">360º Integrada</span></h2>
+                <p class="text-slate-500 text-xs mt-1">Monitoramento em tempo real do ecossistema MX.</p>
+            </div>
+            <div class="flex gap-4">
+                <div class="card-mx px-4 py-2 flex items-center gap-3">
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Agente Nexus</span>
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></div>
+                </div>
+                <button class="bg-[var(--mx-gold)] text-navy-900 px-5 py-2 rounded-lg font-bold text-xs hover:scale-105 transition shadow-lg">NOVA COTAÇÃO</button>
+            </div>
+        </div>
+
+       <div id="page-home" class="page-content">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="card-mx p-6">
+                    <p class="text-slate-400 text-xs uppercase mb-1">Prêmio Emitido (Mês)</p>
+                    <p class="text-2xl font-bold">R$ 428.500 <span class="text-emerald-400 text-xs font-normal">↑ 12%</span></p>
+                </div>
+                <div class="card-mx p-6">
+                    <p class="text-slate-400 text-xs uppercase mb-1">Sinistros Abertos</p>
+                    <p class="text-2xl font-bold">14 <span class="text-slate-500 text-xs font-normal">/ 08 Atend.</span></p>
+                </div>
+                <div class="card-mx p-6">
+                    <p class="text-slate-400 text-xs uppercase mb-1">Inadimplência</p>
+                    <p class="text-2xl font-bold text-rose-400">2.4% <span class="text-xs font-normal text-slate-500">Regulada</span></p>
+                </div>
+                <div class="card-mx p-6">
+                    <p class="text-slate-400 text-xs uppercase mb-1">Meta Trimestral</p>
+                    <div class="w-full bg-white/5 h-2 rounded-full mt-3">
+                        <div class="bg-[var(--mx-gold)] h-full rounded-full" style="width: 85%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card-mx p-8">
+                    <h3 class="text-lg font-bold mb-6 flex items-center gap-2"><i class="fas fa-map-location-dot text-amber-500"></i> Mapa de Oportunidades (Cross-Sell)</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5">
+                            <div><p class="font-bold">Clientes "Auto" sem "Vida"</p><p class="text-xs text-slate-400">128 leads identificados pela IA</p></div>
+                            <button class="text-amber-500 border border-amber-500/30 px-3 py-1 rounded text-xs">Atuar</button>
+                        </div>
+                        <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5">
+                            <div><p class="font-bold">Renovações de Alta Relevância</p><p class="text-xs text-slate-400">15 apólices > R$ 10k este mês</p></div>
+                            <button class="text-amber-500 border border-amber-500/30 px-3 py-1 rounded text-xs">Atuar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-mx p-8">
+                    <h3 class="text-lg font-bold mb-6">Acessos Rápidos</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-sky-500/10 border border-sky-500/20 rounded-xl text-center">
+                            <i class="fas fa-users block text-2xl mb-2 text-sky-400"></i>
+                            <span class="text-xs">Portal Colaborador</span>
+                        </div>
+                        <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+                            <i class="fas fa-user-tie block text-2xl mb-2 text-emerald-400"></i>
+                            <span class="text-xs">Portal Parceiro</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="page-comercial" class="page-content hidden">
+            <div class="grid grid-cols-3 gap-6 mb-8">
+                <div class="card-mx p-6 col-span-2">
+                    <h3 class="font-bold mb-6 text-sm uppercase text-[var(--mx-gold)] tracking-widest">Jornada de Vendas & Status</h3>
+                    <div class="flex gap-4">
+                        <div class="flex-1 text-center p-4 bg-white/2 rounded-xl border-t-2 border-sky-400">
+                            <p class="text-[9px] uppercase font-bold text-slate-500">Cálculo</p>
+                            <p class="text-2xl font-bold">14</p>
+                            <p class="text-[8px] text-sky-400 mt-2">Aguardando Cotação</p>
+                        </div>
+                        <div class="flex-1 text-center p-4 bg-white/2 rounded-xl border-t-2 border-amber-400">
+                            <p class="text-[9px] uppercase font-bold text-slate-500">Apresentação</p>
+                            <p class="text-2xl font-bold">09</p>
+                            <p class="text-[8px] text-amber-400 mt-2">Com o Cliente</p>
+                        </div>
+                        <div class="flex-1 text-center p-4 bg-white/2 rounded-xl border-t-2 border-emerald-400">
+                            <p class="text-[9px] uppercase font-bold text-slate-500">Fechamento</p>
+                            <p class="text-2xl font-bold">06</p>
+                            <p class="text-[8px] text-emerald-400 mt-2">Transmitindo...</p>
+                        </div>
+                        <div class="flex-1 text-center p-4 bg-white/2 rounded-xl border-t-2 border-rose-500">
+                            <p class="text-[9px] uppercase font-bold text-slate-500">Perda</p>
+                            <p class="text-2xl font-bold">03</p>
+                            <p class="text-[8px] text-rose-400 mt-2">Análise de Motivo</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-mx p-6">
+                    <h3 class="font-bold mb-4 text-xs uppercase text-[var(--mx-gold)]">Endossos & Leads</h3>
+                    <div class="space-y-3 h-[180px] overflow-y-auto pr-2">
+                        <div class="p-3 bg-white/5 rounded-lg border border-white/5">
+                            <div class="flex justify-between font-bold text-[11px]"><span>Substituição Veículo</span><span class="text-emerald-400">+ R$ 850,00</span></div>
+                            <p class="text-[9px] text-slate-500 mt-1">Cliente: Posto Itapira | Vig: 12/2026</p>
+                        </div>
+                        <div class="p-3 bg-white/5 rounded-lg border border-white/5">
+                            <div class="flex justify-between font-bold text-[11px]"><span>Lead: Seg. Vida Grupo</span><span class="text-sky-400">Trilha IA</span></div>
+                            <p class="text-[9px] text-slate-500 mt-1">Origem: Site MX | Prioridade: Alta</p>
+                        </div>
+                        </div>
+                    </div> 
+                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card-mx p-8">
+                    <h3 class="text-lg font-bold mb-6 flex items-center gap-2"><i class="fas fa-map-location-dot text-amber-500"></i> Mapa de Oportunidades (Cross-Sell)</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5">
+                            <div><p class="font-bold">Clientes "Auto" sem "Vida"</p><p class="text-xs text-slate-400">128 leads identificados pela IA</p></div>
+                            <button class="text-amber-500 border border-amber-500/30 px-3 py-1 rounded text-xs">Atuar</button>
+                        </div>
+                        <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5">
+                            <div><p class="font-bold">Renovações de Alta Relevância</p><p class="text-xs text-slate-400">15 apólices > R$ 10k este mês</p></div>
+                            <button class="text-amber-500 border border-amber-500/30 px-3 py-1 rounded text-xs">Atuar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>  
+            <div class="card-mx p-8">
+                <h3 class="font-bold mb-6 text-sm">Métricas de Projeção & Atingimento</h3>
+                <div class="grid grid-cols-2 gap-10">
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-2 uppercase font-bold"><span>Prêmio a Emitir (Mês)</span><span class="text-[var(--mx-gold)]">R$ 420.000 / R$ 500.000</span></div>
+                        <div class="w-full bg-white/5 h-3 rounded-full overflow-hidden flex">
+                            <div class="bg-[var(--mx-gold)] h-full" style="width: 84%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed italic">"Baseado no histórico de renovações de Maio e no funil atual de novos negócios, a projeção indica fechamento do trimestre 12% acima da meta estabelecida."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-sinistro" class="page-content hidden">
+            <div>
+                <h2 class="text-2xl font-bold uppercase tracking-tight">Fluxo Operacional <span class="text-amber-500">24H</span></h2>
+                <div class="p-3 card-mx bg-rose-500/5 flex items-center gap-3">
+                    <i class="fas fa-microscope text-rose-500"></i>
+                    <p class="text-[10px] font-bold text-rose-400 uppercase">Auditoria Crítica IA: 02 Alertas de Gargalo em 'Peças'</p>
+                </div>
+            </div>
+            
+            <div class="postit-container">
+                <div class="postit active" onclick="expand(this)"><div class="postit-title-vert">Abertura</div><div class="postit-content p-6">
+                    <h4 class="text-sm font-bold text-sky-400 mb-6 uppercase tracking-widest">Abertura & Comunicação</h4>
+                    <div class="card-mx p-4 bg-black/40">
+                        <div class="flex justify-between mb-2"><span class="font-bold text-sm">Beatriz Mendes</span><span class="badge-status bg-sky-500/20 text-sky-400">Ativo</span></div>
+                        <p class="text-[10px] text-slate-400 mb-4">Sinistro aberto via App MX. Seguradora: Porto.</p>
+                        <div class="border-t border-white/5 pt-3 space-y-2">
+                            <p class="text-[9px] text-emerald-400"><i class="fas fa-check mr-2"></i> WhatsApp: "Olá Beatriz, seu sinistro foi iniciado..."</p>
+                            <p class="text-[9px] text-slate-500"><i class="fas fa-clock mr-2"></i> Próxima att: Vistoria agendada para amanhã.</p>
+                        </div>
+                    </div>
+                </div></div>
+                <div class="postit collapsed" onclick="expand(this)"><div class="postit-title-vert">Vistoria</div><div class="postit-content p-6"><h4>Vistoria</h4></div></div>
+                <div class="postit collapsed" onclick="expand(this)"><div class="postit-title-vert">Oficina</div><div class="postit-content p-6"><h4>Oficina</h4></div></div>
+                <div class="postit collapsed" onclick="expand(this)"><div class="postit-title-vert">Peças</div><div class="postit-content p-6"><h4>Solicitação de Peças</h4></div></div>
+                <div class="postit collapsed" onclick="expand(this)"><div class="postit-title-vert">Reparo</div><div class="postit-content p-6"><h4>Reparo</h4></div></div>
+                <div class="postit collapsed" onclick="expand(this)"><div class="postit-title-vert">Testes</div><div class="postit-content p-6"><h4>Testes de Qualidade</h4></div></div>
+                <div class="postit collapsed" onclick="expand(this)"><div class="postit-title-vert">Entrega</div><div class="postit-content p-6"><h4>Entrega</h4></div></div>
+                <div class="postit collapsed" onclick="expand(this)"><div class="postit-title-vert">Finalizado</div><div class="postit-content p-6"><h4>Finalizado</h4></div></div>
+            </div>
+        </div>
+
+        <div id="page-financeiro" class="page-content hidden">
+            <div class="grid grid-cols-3 gap-8">
+                <div class="col-span-2">
+                    <h3 class="text-xl font-bold mb-6 gold-gradient uppercase tracking-widest text-sm">Régua de Cobrança Automatizada</h3>
+                    <div class="space-y-4">
+                        <div class="card-mx p-6">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-12 h-12 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400 text-xl"><i class="fas fa-envelope-open-text"></i></div>
+                                <div><p class="font-bold">Aviso D-3 (Preventivo)</p><p class="text-xs text-slate-400">Enviado 3 dias antes do vencimento via WhatsApp/E-mail</p></div>
+                            </div>
+                            <div class="regua-step"><p class="text-sm">Enviado hoje para <strong>24 clientes</strong>. <span class="text-emerald-400">92% taxa de abertura</span></p></div>
+                        </div>
+                        <div class="card-mx p-6">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-12 h-12 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 text-xl"><i class="fas fa-triangle-exclamation"></i></div>
+                                <div><p class="font-bold text-rose-400">Inadimplência D+3 a D+9</p><p class="text-xs text-slate-400">Fluxo de 3 a 5 interações conforme número da parcela</p></div>
+                            </div>
+                            <div class="flex gap-2 mb-4">
+                                <span class="text-[10px] bg-white/5 px-2 py-1 rounded">Parcela 1: Espaçamento 10 dias</span>
+                                <span class="text-[10px] bg-white/5 px-2 py-1 rounded">Parcela 6+: Espaçamento 24 dias</span>
+                            </div>
+                            <div class="card-mx bg-rose-500/5 p-4 border-rose-500/20">
+                                <p class="text-xs font-bold text-rose-400 uppercase mb-2">Alerta Vendedor (D+10)</p>
+                                <p class="text-[11px]">03 clientes excederam o prazo automático. Notificação enviada ao comercial.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-mx p-6">
+                    <h3 class="font-bold mb-4">Regras por Seguradora</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-xs p-2 bg-white/5 rounded"><span>Porto Seguro</span><span class="text-amber-500">Recorrente OK</span></div>
+                        <div class="flex justify-between text-xs p-2 bg-white/5 rounded"><span>Azul</span><span class="text-rose-400">Bloqueio Total</span></div>
+                        <div class="flex justify-between text-xs p-2 bg-white/5 rounded"><span>Bradesco</span><span class="text-amber-500">Liberação Débito</span></div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="font-bold mb-4">Conciliação Bancária</h3>
+                        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                            <p class="text-xs text-emerald-400 font-bold mb-1">RECEITA PENDENTE</p>
+                            <p class="text-xl font-bold">R$ 12.450</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div class="card-mx p-8">
+                    <h3 class="font-bold mb-8 text-[var(--mx-gold)] uppercase tracking-widest">DRE - Demonstrativo de Resultado</h3>
+                    <div class="space-y-5 text-sm">
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span>(+) Receitas Operacionais</span><span class="text-emerald-400 font-mono">R$ 184.200</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span>(-) Custos de Produção</span><span class="text-rose-400 font-mono">R$ 32.100</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span>(-) Despesas Administrativas</span><span class="text-rose-400 font-mono">R$ 68.400</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span>(-) Impostos</span><span class="text-rose-400 font-mono">R$ 25.100</span></div>
+                        <div class="flex justify-between font-bold text-xl pt-6"><span>Resultado Líquido</span><span class="text-emerald-500 font-mono">R$ 58.600</span></div>
+                    </div>
+                </div>
+                <div class="card-mx p-8">
+                    <h3 class="font-bold mb-6 text-sm uppercase tracking-widest">Extratos & Conciliação</h3>
+                    <div class="space-y-2 h-[45vh] overflow-y-auto pr-2">
+                        <div class="p-3 bg-white/2 rounded flex justify-between items-center text-xs border border-white/5">
+                            <div><p class="font-bold">Bradesco Seguros - Comis. Março</p><p class="text-[9px] text-slate-500">ID: #RE-90210 | 05/05</p></div>
+                            <span class="text-emerald-400 font-mono">+ R$ 8.420</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-emissao" class="page-content hidden">
+            <div class="flex justify-between items-center mb-8">
+                <div class="relative w-1/2">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                    <input type="text" placeholder="Pesquisar no Diretório Central C.I.C (Apólice, CPF, Nome)..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 px-12 text-sm focus:border-[var(--mx-gold)] outline-none">
+                </div>
+                <div class="flex gap-10">
+                    <div class="text-center"><p class="text-[9px] text-slate-500 uppercase font-bold">Emitidos & Ativos</p><p class="text-2xl font-bold">1.482</p></div>
+                    <div class="text-center text-rose-400"><p class="text-[9px] text-slate-500 uppercase font-bold">Pendentes</p><p class="text-2xl font-bold">14</p></div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-6">
+                <div class="card-mx p-6 border-t-4 border-t-rose-500">
+                    <h4 class="text-xs font-bold mb-6 uppercase tracking-widest">Pendências por Tipo</h4>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center text-xs"><span>Divergência de Perfil</span><span class="badge-status bg-rose-500/20 text-rose-400">06 Casos</span></div>
+                        <div class="flex justify-between items-center text-xs"><span>Falha de Pagamento</span><span class="badge-status bg-rose-500/20 text-rose-400">05 Casos</span></div>
+                        <div class="flex justify-between items-center text-xs"><span>Pendente Vistoria</span><span class="badge-status bg-rose-500/20 text-rose-400">03 Casos</span></div>
+                    </div>
+                </div>
+                <div class="card-mx p-6 col-span-2">
+                    <h4 class="text-xs font-bold mb-6 uppercase tracking-widest">Atividade Recente - Diretório Central</h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-[11px] p-3 bg-white/2 rounded border border-white/5">
+                            <span class="flex items-center gap-3"><i class="fas fa-file-pdf text-rose-500"></i> Apólice_9921_Vida_Beatriz.pdf</span>
+                            <span class="text-emerald-500 font-bold uppercase text-[9px]">Armazenado OK</span>
+                        </div>
+                        <div class="flex justify-between text-[11px] p-3 bg-white/2 rounded border border-white/5">
+                            <span class="flex items-center gap-3"><i class="fas fa-file-invoice text-sky-400"></i> Endosso_221_Frota_MX.pdf</span>
+                            <span class="text-emerald-500 font-bold uppercase text-[9px]">Armazenado OK</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-marketing" class="page-content hidden">
+            <div class="grid grid-cols-3 gap-6 h-[75vh]">
+                <div class="card-mx p-6 space-y-8 overflow-y-auto">
+                    <div>
+                        <h4 class="text-xs font-bold text-[var(--mx-gold)] mb-4 uppercase">Redes Sociais</h4>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="p-4 bg-white/2 rounded-xl border border-white/5">
+                                <i class="fab fa-instagram text-2xl text-pink-500 mb-2"></i><p class="text-[10px] font-bold">12k Seguidores</p>
+                            </div>
+                            <div class="p-4 bg-white/2 rounded-xl border border-white/5">
+                                <i class="fab fa-linkedin text-2xl text-sky-600 mb-2"></i><p class="text-[10px] font-bold">3.4k Conexões</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold mb-4 uppercase">Calendário de Postagem</h4>
+                        <div class="space-y-2 text-[10px]">
+                            <div class="p-2 border-l-2 border-amber-500 bg-white/5"><strong>HOJE 18h:</strong> Story Benefícios do Seguro de Vida</div>
+                            <div class="p-2 border-l-2 border-slate-500 bg-white/2"><strong>AMANHÃ:</strong> Post Carrossel: Como agir em Sinistros</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold mb-4 uppercase">Banco de Imagens (Segurado)</h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="h-12 bg-white/5 rounded border border-dashed border-white/20"></div>
+                            <div class="h-12 bg-white/5 rounded border border-dashed border-white/20"></div>
+                            <div class="h-12 bg-white/5 rounded border border-dashed border-white/20"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-span-2 card-mx flex flex-col overflow-hidden">
+                    <div class="p-6 border-b border-white/5 flex justify-between bg-black/20">
+                        <h3 class="font-bold text-sm tracking-widest uppercase">Chat Interno / Nexus Intel</h3>
+                        <span class="text-[10px] text-emerald-500 font-bold uppercase animate-pulse">12 Membros Ativos</span>
+                    </div>
+                    <div class="flex-1 p-6 overflow-y-auto space-y-4 bg-[#03060f]">
+                        <div class="w-3/4 p-4 bg-white/5 rounded-2xl rounded-tl-none text-xs border border-white/5">
+                            <p class="text-[var(--mx-gold)] font-bold mb-1">Nexus (IA)</p>
+                            <p>O sinistro de <strong>Ricardo Gomes</strong> acaba de entrar em estágio de 'Oficina'. Notificação enviada automaticamente para o cliente.</p>
+                        </div>
+                        <div class="w-3/4 p-4 bg-sky-500/10 rounded-2xl rounded-tr-none text-xs border border-sky-500/20 ml-auto">
+                            <p class="text-sky-400 font-bold mb-1 text-right">Yuri Neves</p>
+                            <p class="text-right">Excelente. Pessoal do comercial, o DRE indica que estamos próximos da meta trimestral, foco total nos leads do C.I.C hoje.</p>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-black/40 border-t border-white/5 flex gap-4">
+                        <input type="text" placeholder="Compartilhar insight ou mensagem..." class="flex-1 bg-white/5 border border-white/10 rounded-lg px-6 py-3 text-sm focus:border-[var(--mx-gold)] outline-none">
+                        <button class="btn-gold px-8 rounded-lg"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div id="page-rh" class="page-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card-mx p-6 border-l-4 border-l-amber-500">
+                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Total de Pessoas</p>
+                    <p class="text-3xl font-bold">23 <span class="text-xs font-normal text-slate-500">Colaboradores</span></p>
+                </div>
+                <div class="card-mx p-6 border-l-4 border-l-sky-500">
+                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Processos Contratação</p>
+                    <p class="text-3xl font-bold">02 <span class="text-xs font-normal text-slate-500">Em 90 dias (Trial)</span></p>
+                </div>
+                <div class="card-mx p-6 border-l-4 border-l-emerald-500">
+                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Banco de Horas</p>
+                    <p class="text-3xl font-bold">Saldo <span class="text-emerald-400">+112h</span></p>
+                </div>
+            </div>
+
+            <div class="card-mx overflow-hidden">
+                <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/2">
+                    <h3 class="font-bold">Controle de Jornada & Ponto (Tempo Real)</h3>
+                    <div class="flex gap-2 text-[10px] font-bold uppercase">
+                        <span class="text-emerald-500"><i class="fas fa-circle mr-1"></i> Logged In</span>
+                        <span class="text-amber-500"><i class="fas fa-circle mr-1"></i> Visita Externa</span>
+                    </div>
+                </div>
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-white/5 text-[10px] uppercase text-slate-500">
+                        <tr><th class="p-4">Colaborador</th><th>Entrada</th><th>Almoço</th><th>Saída</th><th>Status</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        <tr>
+                            <td class="p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-700"></div> João Silva</td>
+                            <td>08:02 <span class="text-[10px] text-slate-500">(Tol. 10m OK)</span></td>
+                            <td>12:00 - 13:00</td>
+                            <td>--:--</td>
+                            <td><span class="badge-status bg-emerald-500/20 text-emerald-500">Ativo</span></td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-700"></div> Maria Oliveira</td>
+                            <td>07:55</td>
+                            <td>12:00 - 13:00</td>
+                            <td>--:--</td>
+                            <td><span class="badge-status bg-amber-500/20 text-amber-500">Modo Visita</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function showPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('sidebar-active'));
+            
+            const targetPage = document.getElementById('page-' + pageId);
+            if(targetPage) targetPage.classList.remove('hidden');
+            
+            event.currentTarget.classList.add('sidebar-active');
+
+            const titles = {
+                'home': 'Visão <span class="font-bold gold-gradient">360º Integrada</span>',
+                'comercial': 'CRM & <span class="font-bold gold-gradient">Funil de Vendas</span>',
+                'sinistro': 'Operação <span class="font-bold gold-gradient">Sinistros & 24h</span>',
+                'financeiro': 'Controladoria <span class="font-bold gold-gradient">& DRE</span>',
+                'emissao': 'Diretório <span class="font-bold gold-gradient">C.I.C Central</span>',
+                'marketing': 'Marketing <span class="font-bold gold-gradient">& Canais</span>',
+                'rh': 'Pessoas & <span class="font-bold gold-gradient">Jornada MX</span>'
+            };
+            document.getElementById('page-title').innerHTML = titles[pageId];
+        }
+
+        function expand(card) {
+            const container = card.parentElement;
+            container.querySelectorAll('.postit').forEach(c => {
+                c.classList.remove('active', 'collapsed');
+                if (c === card) c.classList.add('active');
+                else c.classList.add('collapsed');
+            });
+        }
+    </script>
+</body>
+</html>
