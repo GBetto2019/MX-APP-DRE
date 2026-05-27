@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import cfg
-from app.routers import chat, comissoes, dre, estornos, metas, repasses
+from app.routers import chat, comissoes, configuracoes, dre, estornos, lancamentos, metas, repasses
 
 logging.basicConfig(
     level=logging.DEBUG if not cfg.is_production else logging.INFO,
@@ -38,9 +38,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"] if not cfg.is_production else ["https://app.mxseguros.com.br"],
+    allow_origins=(
+        ["http://localhost:3000", "http://localhost:3001"]
+        if not cfg.is_production
+        else ["https://app.mxseguros.com.br"]
+    ),
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type"],
 )
 
@@ -52,6 +56,8 @@ app.include_router(comissoes.router)
 app.include_router(estornos.router)
 app.include_router(metas.router)
 app.include_router(repasses.router)
+app.include_router(lancamentos.router)
+app.include_router(configuracoes.router)
 
 
 # ── HEALTH CHECK ──────────────────────────────────────────────

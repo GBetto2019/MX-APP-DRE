@@ -14,21 +14,29 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
-  { href: "/dashboard/dre", label: "DRE", icon: BarChart3 },
-  { href: "/dashboard/estornos", label: "Estornos", icon: TrendingDown },
-  { href: "/dashboard/metas", label: "Metas", icon: Target },
-  { href: "/dashboard/repasses", label: "Repasses", icon: ArrowRightLeft },
-  { href: "/dashboard/chat", label: "Assistente IA", icon: MessageSquare },
+  { href: "/dashboard",             label: "Visão Geral",  icon: LayoutDashboard },
+  { href: "/dashboard/dre",         label: "DRE",          icon: BarChart3 },
+  { href: "/dashboard/lancamentos", label: "Lançamentos",  icon: BookOpen },
+  { href: "/dashboard/estornos",    label: "Estornos",     icon: TrendingDown },
+  { href: "/dashboard/metas",       label: "Metas",        icon: Target },
+  { href: "/dashboard/repasses",    label: "Repasses",     icon: ArrowRightLeft },
+  { href: "/dashboard/chat",        label: "Assistente IA",icon: MessageSquare },
 ];
 
-export default function Sidebar({ userEmail }: { userEmail: string }) {
-  const pathname = usePathname();
-  const router = useRouter();
+interface SidebarProps {
+  userEmail: string;
+  userRole:  string;
+}
+
+export default function Sidebar({ userEmail, userRole }: SidebarProps) {
+  const pathname  = usePathname();
+  const router    = useRouter();
   const [collapsed, setCollapsed] = useState(false);
 
   async function handleLogout() {
@@ -95,8 +103,24 @@ export default function Sidebar({ userEmail }: { userEmail: string }) {
         })}
       </nav>
 
-      {/* Footer: email + logout */}
+      {/* Footer: configurações (admin) + email + logout */}
       <div className="border-t border-blue-800 px-2 py-3 space-y-1">
+        {userRole === "admin" && (
+          <Link
+            href="/dashboard/configuracoes"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors",
+              pathname.startsWith("/dashboard/configuracoes")
+                ? "bg-blue-700 text-white"
+                : "text-blue-200 hover:bg-blue-800 hover:text-white"
+            )}
+            title={collapsed ? "Configurações" : undefined}
+          >
+            <Settings className="w-5 h-5 flex-shrink-0" />
+            {!collapsed && <span className="text-sm font-medium">Configurações</span>}
+          </Link>
+        )}
+
         {!collapsed && (
           <p className="text-blue-300 text-xs px-3 truncate">{userEmail}</p>
         )}

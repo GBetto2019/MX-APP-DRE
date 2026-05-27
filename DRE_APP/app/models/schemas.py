@@ -143,6 +143,146 @@ class ReceitaRamoResponse(RespostaBase):
     total:    Decimal
 
 
+# ── CONFIGURAÇÕES: BANCOS ─────────────────────────────────────
+
+class BancoItem(RespostaBase):
+    id:        UUID
+    nome:      str
+    ativo:     bool
+
+
+class BancoCreate(RespostaBase):
+    nome: str
+
+
+class BancoUpdate(RespostaBase):
+    nome:  str | None = None
+    ativo: bool | None = None
+
+
+# ── CONFIGURAÇÕES: CENTROS DE CUSTO ───────────────────────────
+
+class CentroCustoItem(RespostaBase):
+    id:     UUID
+    nome:   str
+    codigo: str
+    ativo:  bool
+
+
+class CentroCustoCreate(RespostaBase):
+    nome:   str
+    codigo: str
+
+
+class CentroCustoUpdate(RespostaBase):
+    nome:  str | None = None
+    ativo: bool | None = None
+
+
+# ── CONFIGURAÇÕES: TIPOS DE LANÇAMENTO ────────────────────────
+
+class TipoLancamentoItem(RespostaBase):
+    id:         UUID
+    nome:       str
+    natureza:   str   # 'despesa' | 'receita'
+    categoria:  str | None
+    custo_tipo: str | None
+    ativo:      bool
+
+
+class TipoLancamentoCreate(RespostaBase):
+    nome:       str
+    natureza:   str
+    categoria:  str | None = None
+    custo_tipo: str | None = None
+
+
+class TipoLancamentoUpdate(RespostaBase):
+    nome:       str | None = None
+    categoria:  str | None = None
+    custo_tipo: str | None = None
+    ativo:      bool | None = None
+
+
+# ── LANÇAMENTOS: DESPESAS ─────────────────────────────────────
+
+class DespesaCreate(RespostaBase):
+    tipo_lancamento_id: UUID | None = None
+    banco_id:           UUID | None = None
+    categoria:          str | None = None   # ENUM legado — obrigatório se tipo_lancamento_id for None
+    subcategoria:       str
+    descricao:          str
+    valor:              Decimal
+    competencia:        date
+    paga_em:            date | None = None
+    centro_custo:       str = "matriz"
+    recorrente:         bool = False
+    parcela_atual:      int | None = None
+    parcela_total:      int | None = None
+
+
+class DespesaItem(RespostaBase):
+    id:                 UUID
+    tipo_lancamento_id: UUID | None
+    tipo_nome:          str | None          # nome do tipo (join)
+    banco_id:           UUID | None
+    banco_nome:         str | None          # nome do banco (join)
+    categoria:          str | None
+    subcategoria:       str
+    descricao:          str
+    valor:              Decimal
+    competencia:        date
+    paga_em:            date | None
+    centro_custo:       str
+    recorrente:         bool
+    parcela_atual:      int | None
+    parcela_total:      int | None
+    criado_em:          Any | None = None
+
+
+class DespesasResponse(RespostaBase):
+    total:      int
+    items:      list[DespesaItem]
+    soma_total: Decimal
+
+
+# ── LANÇAMENTOS: RECEITAS ─────────────────────────────────────
+
+class ReceitaOutraCreate(RespostaBase):
+    tipo_lancamento_id: UUID | None = None
+    banco_id:           UUID | None = None
+    centro_custo:       str = "matriz"
+    descricao:          str
+    valor:              Decimal
+    competencia:        date
+    recebido_em:        date | None = None
+    observacao:         str | None = None
+
+
+class ReceitaItem(RespostaBase):
+    """Representa tanto comissão (origem=comissao) quanto receita manual (origem=manual)."""
+    id:                 UUID
+    origem:             str             # 'comissao' | 'manual'
+    tipo_lancamento_id: UUID | None = None
+    tipo_nome:          str | None = None
+    banco_id:           UUID | None = None
+    banco_nome:         str | None = None
+    descricao:          str
+    valor:              Decimal
+    competencia:        date
+    recebido_em:        date | None = None
+    centro_custo:       str | None = None
+    observacao:         str | None = None
+
+
+class ReceitasResponse(RespostaBase):
+    total:               int
+    items:               list[ReceitaItem]
+    soma_comissoes:      Decimal
+    soma_manuais:        Decimal
+    soma_total:          Decimal
+
+
 # ── ERROS ─────────────────────────────────────────────────────
 
 class ErroResponse(RespostaBase):

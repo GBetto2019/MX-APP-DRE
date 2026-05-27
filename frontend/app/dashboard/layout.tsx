@@ -16,9 +16,18 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  // Busca role do usuário para controle de menu admin
+  const { data: perfil } = await supabase
+    .from("usuarios")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const userRole = perfil?.role ?? "comercial";
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar userEmail={user.email ?? ""} />
+      <Sidebar userEmail={user.email ?? ""} userRole={userRole} />
       <main className="flex-1 overflow-y-auto">
         <div className="p-6 max-w-7xl mx-auto">{children}</div>
       </main>
