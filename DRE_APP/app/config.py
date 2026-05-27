@@ -26,6 +26,9 @@ class Configuracoes(BaseSettings):
     # Banco direto (opcional; necessário para asyncpg)
     database_url: str = ""
 
+    # Claude API
+    anthropic_api_key: str = ""
+
     # App
     environment: str = "development"
     secret_key: str = "dev-secret-nao-usar-em-producao"

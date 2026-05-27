@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import cfg
-from app.routers import comissoes, dre, estornos, metas, repasses
+from app.routers import chat, comissoes, dre, estornos, metas, repasses
 
 logging.basicConfig(
     level=logging.DEBUG if not cfg.is_production else logging.INFO,
@@ -46,6 +46,7 @@ app.add_middleware(
 
 # ── ROUTERS ───────────────────────────────────────────────────
 
+app.include_router(chat.router)
 app.include_router(dre.router)
 app.include_router(comissoes.router)
 app.include_router(estornos.router)
