@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [erro, setErro] = useState("");
+  const [email, setEmail]         = useState("");
+  const [senha, setSenha]         = useState("");
+  const [erro, setErro]           = useState("");
   const [carregando, setCarregando] = useState(false);
 
   async function handleLogin(e: React.FormEvent) {
@@ -23,7 +26,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setErro("Email ou senha inválidos.");
+      setErro("E-mail ou senha inválidos. Tente novamente.");
       setCarregando(false);
       return;
     }
@@ -33,67 +36,176 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-blue-700 px-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        {/* Logo / Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4">
-            <span className="text-white text-2xl font-bold">MX</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">MX Seguros</h1>
-          <p className="text-gray-500 text-sm mt-1">DRE com Inteligência Artificial</p>
+    <div className="min-h-screen flex" style={{ backgroundColor: "#F6F6F4" }}>
+
+      {/* ── Painel esquerdo (decorativo) ──────────────────── */}
+      <div
+        className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden"
+        style={{ backgroundColor: "#0C1934" }}
+      >
+        {/* Círculos decorativos */}
+        <div
+          className="absolute -top-24 -right-24 w-96 h-96 rounded-full opacity-5"
+          style={{ backgroundColor: "#CAE3F2" }}
+        />
+        <div
+          className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full opacity-5"
+          style={{ backgroundColor: "#B5A882" }}
+        />
+
+        {/* Logo */}
+        <div className="relative z-10">
+          <Image
+            src="/logos/logo_01.png"
+            alt="MX Corretora de Seguros"
+            width={200}
+            height={50}
+            className="object-contain"
+          />
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-              placeholder="seu@email.com"
-              required
-              autoComplete="email"
-            />
-          </div>
+        {/* Copy central */}
+        <div className="relative z-10">
+          <h2 className="text-4xl font-bold text-white leading-tight mb-4">
+            Gestão financeira{" "}
+            <span style={{ color: "#CAE3F2" }}>inteligente</span>
+            <br />em tempo real
+          </h2>
+          <p className="text-base leading-relaxed" style={{ color: "rgba(202,227,242,0.65)" }}>
+            DRE atualizado, lançamentos organizados por banco e centro de
+            custo, e um assistente com IA pronto para responder suas dúvidas.
+          </p>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Senha
-            </label>
-            <input
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-              placeholder="••••••••"
-              required
-              autoComplete="current-password"
-            />
-          </div>
-
-          {erro && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-              {erro}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={carregando}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200"
-          >
-            {carregando ? "Entrando..." : "Entrar"}
-          </button>
-        </form>
-
-        <p className="text-center text-xs text-gray-400 mt-6">
-          MX Seguros © {new Date().getFullYear()} · Todos os direitos reservados
-        </p>
+        {/* Footer do painel */}
+        <div className="relative z-10">
+          <p className="text-xs" style={{ color: "rgba(202,227,242,0.3)" }}>
+            © {new Date().getFullYear()} MX Corretora de Seguros
+          </p>
+        </div>
       </div>
+
+      {/* ── Painel direito (formulário) ───────────────────── */}
+      <div className="flex-1 flex flex-col justify-center items-center px-6 py-12">
+
+        {/* Voltar para landing (mobile) */}
+        <div className="w-full max-w-md mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm transition-colors"
+            style={{ color: "#B5A882" }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </Link>
+        </div>
+
+        {/* Logo mobile */}
+        <div className="lg:hidden mb-8">
+          <Image
+            src="/logos/logo_02.png"
+            alt="MX Corretora de Seguros"
+            width={180}
+            height={45}
+            className="object-contain"
+          />
+        </div>
+
+        {/* Card do formulário */}
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-sm border border-gray-100 p-10">
+
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold mb-1" style={{ color: "#0C1934" }}>
+              Bem-vindo de volta
+            </h1>
+            <p className="text-sm" style={{ color: "#3E3E3E" }}>
+              Acesse com as suas credenciais
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label
+                className="block text-xs font-semibold mb-1.5 uppercase tracking-wide"
+                style={{ color: "#0C1934" }}
+              >
+                E-mail
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border rounded-xl text-sm outline-none transition-all"
+                style={{
+                  borderColor: "#E5E5E5",
+                  color: "#0C1934",
+                  backgroundColor: "#FAFAFA",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "#0C1934")}
+                onBlur={(e) => (e.target.style.borderColor = "#E5E5E5")}
+                placeholder="seu@mxseguros.com.br"
+                required
+                autoComplete="email"
+              />
+            </div>
+
+            <div>
+              <label
+                className="block text-xs font-semibold mb-1.5 uppercase tracking-wide"
+                style={{ color: "#0C1934" }}
+              >
+                Senha
+              </label>
+              <input
+                type="password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                className="w-full px-4 py-3 border rounded-xl text-sm outline-none transition-all"
+                style={{
+                  borderColor: "#E5E5E5",
+                  color: "#0C1934",
+                  backgroundColor: "#FAFAFA",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "#0C1934")}
+                onBlur={(e) => (e.target.style.borderColor = "#E5E5E5")}
+                placeholder="••••••••"
+                required
+                autoComplete="current-password"
+              />
+            </div>
+
+            {erro && (
+              <div
+                className="px-4 py-3 rounded-xl text-sm"
+                style={{
+                  backgroundColor: "rgba(239,68,68,0.07)",
+                  border: "1px solid rgba(239,68,68,0.2)",
+                  color: "#DC2626",
+                }}
+              >
+                {erro}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={carregando}
+              className="w-full py-3.5 rounded-xl text-sm font-bold transition-all duration-200 hover:opacity-90 disabled:opacity-60 mt-2"
+              style={{ backgroundColor: "#0C1934", color: "#CAE3F2" }}
+            >
+              {carregando ? "Entrando..." : "Entrar no sistema"}
+            </button>
+          </form>
+
+          <p
+            className="text-center text-xs mt-8 leading-relaxed"
+            style={{ color: "#B5A882" }}
+          >
+            Não tem acesso? Fale com o administrador do sistema.
+          </p>
+        </div>
+      </div>
+
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -54,12 +55,19 @@ export default function Sidebar({ userEmail, userRole }: SidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-blue-800">
-        <div className="flex-shrink-0 w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-          <span className="text-blue-900 text-xs font-bold">MX</span>
-        </div>
-        {!collapsed && (
-          <span className="font-bold text-lg truncate">MX Seguros</span>
+      <div className="flex items-center justify-center px-4 py-5 border-b border-blue-800 min-h-[72px]">
+        {collapsed ? (
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+            <span className="text-blue-900 text-xs font-bold">MX</span>
+          </div>
+        ) : (
+          <Image
+            src="/logos/logo_01.png"
+            alt="MX Seguros"
+            width={130}
+            height={33}
+            className="object-contain"
+          />
         )}
       </div>
 
