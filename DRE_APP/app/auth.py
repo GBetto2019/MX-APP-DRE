@@ -7,6 +7,8 @@ via input são rejeitadas automaticamente.
 """
 from __future__ import annotations
 
+import asyncio
+import time as _time
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -15,6 +17,11 @@ from jose import JWTError, jwt
 from pydantic import BaseModel
 
 from app.config import cfg
+
+# Cache em memória: {user_id: (role, timestamp_monotonic)}
+# TTL de 60s — role raramente muda; invalida automaticamente ao expirar.
+_role_cache: dict[str, tuple[str, float]] = {}
+_ROLE_TTL = 60.0
 
 BEARER = HTTPBearer()
 
@@ -71,9 +78,14 @@ async def obter_usuario_atual(
 
 async def _buscar_role_no_banco(user_id: str) -> str:
     """
-    Busca o role do usuário diretamente na tabela usuarios.
+    Busca o role do usuário na tabela usuarios, com cache TTL=60s.
     Source of truth para permissões — nunca confia no JWT para isso.
     """
+    now = _time.monotonic()
+    cached = _role_cache.get(user_id)
+    if cached and now - cached[1] < _ROLE_TTL:
+        return cached[0]
+
     from supabase import create_client
     admin = create_client(cfg.supabase_url, cfg.supabase_service_role_key)
     try:
@@ -83,7 +95,9 @@ async def _buscar_role_no_banco(user_id: str) -> str:
             .limit(1) \
             .execute()
         if resp.data:
-            return resp.data[0]["role"]
+            role = resp.data[0]["role"]
+            _role_cache[user_id] = (role, now)
+            return role
     except Exception:
         pass
     raise HTTPException(
