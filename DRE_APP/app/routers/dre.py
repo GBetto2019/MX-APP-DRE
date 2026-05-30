@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from app.auth import UsuarioAtual, obter_usuario_atual
 from app.database import get_supabase_usuario
-from app.models.schemas import DREResponse, ReceitaRamoResponse
+from app.models.schemas import DREResponse, DashboardResponse, ReceitaRamoResponse
 from app.services import dre_service
 
 router = APIRouter(prefix="/dre", tags=["DRE"])

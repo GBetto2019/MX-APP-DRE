@@ -33,6 +33,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
+    lifespan=lifespan,
     title="MX Seguros — DRE-IA API",
     description=(
         "Backend do sistema de DRE com IA para a MX Seguros. "

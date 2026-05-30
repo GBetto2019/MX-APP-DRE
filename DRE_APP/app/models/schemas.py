@@ -428,6 +428,15 @@ class FechamentosResponse(RespostaBase):
     items: list[FechamentoItem]
 
 
+# ── DASHBOARD AGREGADO ────────────────────────────────────────
+
+class DashboardResponse(RespostaBase):
+    periodo: dict[str, date]
+    dre:     LinhasDRE
+    perfil:  str
+    metas:   MetasResponse
+
+
 # ── ERROS ─────────────────────────────────────────────────────
 
 class ErroResponse(RespostaBase):
