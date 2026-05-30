@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from app.auth import UsuarioAtual, obter_usuario_atual
 from app.database import get_supabase_admin, get_supabase_usuario
 from app.models.schemas import (
-    DespesaCreate, DespesaItem, DespesasResponse,
+    DespesaAprovacaoRejeicao, DespesaCreate, DespesaItem, DespesasResponse,
     ReceitaItem, ReceitaOutraCreate, ReceitasResponse,
 )
 from app.services import financeiro_service

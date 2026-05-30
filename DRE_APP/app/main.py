@@ -9,12 +9,14 @@ Swagger UI: http://localhost:8000/docs
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import cfg
+from app.database import close_asyncpg_pool, init_asyncpg_pool
 from app.routers import chat, comissoes, configuracoes, dre, estornos, lancamentos, metas, repasses
 
 logging.basicConfig(
@@ -22,7 +24,16 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_asyncpg_pool()
+    yield
+    await close_asyncpg_pool()
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="MX Seguros — DRE-IA API",
     description=(
         "Backend do sistema de DRE com IA para a MX Seguros. "

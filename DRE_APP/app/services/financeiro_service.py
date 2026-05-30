@@ -140,8 +140,10 @@ async def buscar_despesas(
             "id, categoria, subcategoria, descricao, valor, competencia, "
             "paga_em, centro_custo, recorrente, parcela_atual, parcela_total, "
             "criado_em, tipo_lancamento_id, banco_id, "
+            "status, criado_por, aprovado_por, aprovado_em, rejeitado_motivo, "
             "tipos_lancamento(nome), bancos(nome)"
         )
+        .neq("status", "excluida")
         .gte("competencia", inicio.isoformat())
         .lte("competencia", fim.isoformat())
         .order("competencia", desc=True)
@@ -173,10 +175,16 @@ async def buscar_despesas(
             parcela_atual=row.get("parcela_atual"),
             parcela_total=row.get("parcela_total"),
             criado_em=row.get("criado_em"),
+            status=row.get("status", "aprovada"),
+            criado_por=row.get("criado_por"),
+            aprovado_por=row.get("aprovado_por"),
+            aprovado_em=row.get("aprovado_em"),
+            rejeitado_motivo=row.get("rejeitado_motivo"),
         ))
 
     soma = sum(i.valor for i in items)
-    return DespesasResponse(total=len(items), items=items, soma_total=soma)
+    pendentes = sum(1 for i in items if i.status == "pendente")
+    return DespesasResponse(total=len(items), items=items, soma_total=soma, total_pendentes=pendentes)
 
 
 async def criar_despesa(
@@ -193,13 +201,18 @@ async def criar_despesa(
         if resp_tipo.data:
             categoria = resp_tipo.data.get("categoria")
 
+    # admin e contador entram com aprovação imediata; demais ficam pendentes
+    status_inicial = "aprovada" if usuario.role in ("admin", "contador") else "pendente"
+
     dados = {
-        "subcategoria":       payload.subcategoria,
-        "descricao":          payload.descricao,
-        "valor":              str(payload.valor),
-        "competencia":        payload.competencia.isoformat(),
-        "centro_custo":       payload.centro_custo,
-        "recorrente":         payload.recorrente,
+        "subcategoria":  payload.subcategoria,
+        "descricao":     payload.descricao,
+        "valor":         str(payload.valor),
+        "competencia":   payload.competencia.isoformat(),
+        "centro_custo":  payload.centro_custo,
+        "recorrente":    payload.recorrente,
+        "criado_por":    usuario.user_id,
+        "status":        status_inicial,
     }
     if categoria:
         dados["categoria"] = categoria
@@ -247,11 +260,87 @@ async def criar_despesa(
         parcela_atual=row.get("parcela_atual"),
         parcela_total=row.get("parcela_total"),
         criado_em=row.get("criado_em"),
+        status=row.get("status", status_inicial),
+        criado_por=row.get("criado_por"),
+        aprovado_por=row.get("aprovado_por"),
+        aprovado_em=row.get("aprovado_em"),
+        rejeitado_motivo=row.get("rejeitado_motivo"),
+    )
+
+
+async def aprovar_despesa(despesa_id: UUID, usuario: UsuarioAtual, db: Client) -> DespesaItem:
+    from datetime import datetime, timezone
+    agora = datetime.now(timezone.utc).isoformat()
+    resp = (
+        db.table("despesas")
+        .update({
+            "status":       "aprovada",
+            "aprovado_por": usuario.user_id,
+            "aprovado_em":  agora,
+        })
+        .eq("id", str(despesa_id))
+        .neq("status", "excluida")
+        .execute()
+    )
+    if not resp.data:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Despesa não encontrada.")
+    row = resp.data[0]
+    return _row_para_despesa_item(row)
+
+
+async def rejeitar_despesa(
+    despesa_id: UUID,
+    motivo: str,
+    usuario: UsuarioAtual,
+    db: Client,
+) -> DespesaItem:
+    resp = (
+        db.table("despesas")
+        .update({
+            "status":            "rejeitada",
+            "aprovado_por":      usuario.user_id,
+            "rejeitado_motivo":  motivo,
+        })
+        .eq("id", str(despesa_id))
+        .neq("status", "excluida")
+        .execute()
+    )
+    if not resp.data:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Despesa não encontrada.")
+    row = resp.data[0]
+    return _row_para_despesa_item(row)
+
+
+def _row_para_despesa_item(row: dict) -> DespesaItem:
+    return DespesaItem(
+        id=row["id"],
+        tipo_lancamento_id=row.get("tipo_lancamento_id"),
+        tipo_nome=None,
+        banco_id=row.get("banco_id"),
+        banco_nome=None,
+        categoria=row.get("categoria"),
+        subcategoria=row.get("subcategoria", ""),
+        descricao=row["descricao"],
+        valor=_dec(row["valor"]),
+        competencia=row["competencia"],
+        paga_em=row.get("paga_em"),
+        centro_custo=row.get("centro_custo", "matriz"),
+        recorrente=bool(row.get("recorrente", False)),
+        parcela_atual=row.get("parcela_atual"),
+        parcela_total=row.get("parcela_total"),
+        criado_em=row.get("criado_em"),
+        status=row.get("status", "pendente"),
+        criado_por=row.get("criado_por"),
+        aprovado_por=row.get("aprovado_por"),
+        aprovado_em=row.get("aprovado_em"),
+        rejeitado_motivo=row.get("rejeitado_motivo"),
     )
 
 
 async def deletar_despesa(despesa_id: UUID, db: Client) -> None:
-    db.table("despesas").delete().eq("id", str(despesa_id)).execute()
+    db.table("despesas").update({"status": "excluida"}).eq("id", str(despesa_id)).execute()
 
 
 # ── Receitas (comissões + manuais) ────────────────────────────

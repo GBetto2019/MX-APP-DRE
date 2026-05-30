@@ -397,6 +397,46 @@ class ReceitasResponse(RespostaBase):
     soma_total:          Decimal
 
 
+# ── FECHAMENTOS MENSAIS ───────────────────────────────────────
+
+class FechamentoCreate(RespostaBase):
+    competencia: date
+
+    @field_validator("competencia")
+    @classmethod
+    def normalizar_para_primeiro_dia(cls, v: date) -> date:
+        return date(v.year, v.month, 1)
+
+
+class ReabrirFechamento(RespostaBase):
+    motivo: str
+
+
+class FechamentoItem(RespostaBase):
+    id:              UUID
+    competencia:     date
+    fechado_por:     UUID | None
+    fechado_em:      datetime
+    snapshot_dre:    dict[str, Any]
+    reaberto_por:    UUID | None = None
+    reaberto_em:     datetime | None = None
+    reaberto_motivo: str | None = None
+
+
+class FechamentosResponse(RespostaBase):
+    total: int
+    items: list[FechamentoItem]
+
+
+# ── DASHBOARD AGREGADO ────────────────────────────────────────
+
+class DashboardResponse(RespostaBase):
+    periodo: dict[str, date]
+    dre:     LinhasDRE
+    perfil:  str
+    metas:   MetasResponse
+
+
 # ── ERROS ─────────────────────────────────────────────────────
 
 class ErroResponse(RespostaBase):
