@@ -3,8 +3,8 @@ MX Seguros — DRE-IA | Serviço de DRE e consultas financeiras.
 
 REGRA FUNDAMENTAL: LLM nunca calcula DRE.
 Todo cálculo é determinístico via funções SQL (dre_por_periodo etc.).
-Este serviço apenas chama essas funções com o cliente do usuário
-(JWT) para que o RLS filtre automaticamente.
+Este serviço chama essas funções via asyncpg (direto ao Postgres) quando
+DATABASE_URL está configurada, ou via PostgREST (supabase-py) como fallback.
 """
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from decimal import Decimal
 from supabase import Client
 
 from app.auth import UsuarioAtual
+from app.database import conn_as_user, get_asyncpg_pool
 from app.models.schemas import (
     ComissaoItem, ComissoesResponse,
     DREResponse, EstornoItem, EstornosResponse,
@@ -26,6 +27,10 @@ from app.models.schemas import (
 logger = logging.getLogger(__name__)
 
 
+def _pool():
+    return get_asyncpg_pool()
+
+
 # ── DRE ───────────────────────────────────────────────────────
 
 async def buscar_dre(
@@ -34,16 +39,18 @@ async def buscar_dre(
     usuario: UsuarioAtual,
     db: Client,
 ) -> DREResponse:
-    """
-    Chama a função SQL dre_por_periodo com o cliente JWT do usuário.
-    RLS filtra automaticamente conforme o perfil.
-    """
-    resp = db.rpc("dre_por_periodo", {
-        "p_inicio": inicio.isoformat(),
-        "p_fim":    fim.isoformat(),
-    }).execute()
-
-    dados = resp.data or {}
+    if _pool():
+        async with conn_as_user(usuario.user_id) as conn:
+            dados = await conn.fetchval(
+                "SELECT dre_por_periodo($1::date, $2::date)",
+                inicio, fim,
+            ) or {}
+    else:
+        resp = db.rpc("dre_por_periodo", {
+            "p_inicio": inicio.isoformat(),
+            "p_fim":    fim.isoformat(),
+        }).execute()
+        dados = resp.data or {}
 
     periodo = dados.get("periodo", {})
 
@@ -51,16 +58,13 @@ async def buscar_dre(
         val = dados.get(chave)
         return Decimal(str(val)) if val is not None else None
 
-    # Campos sempre visíveis
     dre = LinhasDRE(
         receita_bruta   = _decimal("receita_bruta")   or Decimal(0),
         estornos        = _decimal("estornos")        or Decimal(0),
         impostos        = _decimal("impostos")        or Decimal(0),
-        # Campos filtrados conforme perfil (§4.5)
         receita_liquida     = None if usuario.role == "comercial" else _decimal("receita_liquida"),
         repasses_produtores = _decimal("repasses_produtores"),
         margem_contribuicao = None if usuario.role == "comercial" else _decimal("margem_contribuicao"),
-        # Gestor e Comercial não veem despesas nem EBITDA
         despesas_fixas            = None if usuario.role in ("gestor", "comercial") else _decimal("despesas_fixas"),
         ebitda                    = None if usuario.role in ("gestor", "comercial") else _decimal("ebitda"),
         despesas_nao_operacionais = None if usuario.role in ("gestor", "comercial") else _decimal("despesas_nao_operacionais"),
@@ -78,21 +82,27 @@ async def buscar_comissoes(
     usuario: UsuarioAtual,
     db: Client,
 ) -> ComissoesResponse:
-    resp = db.table("comissoes") \
-        .select("*") \
-        .gte("competencia", inicio.isoformat()) \
-        .lte("competencia", fim.isoformat()) \
-        .order("competencia", desc=True) \
-        .execute()
+    if _pool():
+        async with conn_as_user(usuario.user_id) as conn:
+            rows = await conn.fetch(
+                "SELECT id, apolice_id, tipo, valor, percentual, competencia, recebida_em "
+                "FROM comissoes "
+                "WHERE competencia >= $1 AND competencia <= $2 "
+                "ORDER BY competencia DESC",
+                inicio, fim,
+            )
+            items = [ComissaoItem(**dict(r)) for r in rows]
+    else:
+        resp = db.table("comissoes") \
+            .select("*") \
+            .gte("competencia", inicio.isoformat()) \
+            .lte("competencia", fim.isoformat()) \
+            .order("competencia", desc=True) \
+            .execute()
+        items = [ComissaoItem(**row) for row in (resp.data or [])]
 
-    items = [ComissaoItem(**row) for row in (resp.data or [])]
     soma = sum(i.valor for i in items)
-
-    return ComissoesResponse(
-        total=len(items),
-        items=items,
-        soma_total=soma,
-    )
+    return ComissoesResponse(total=len(items), items=items, soma_total=soma)
 
 
 # ── ESTORNOS ──────────────────────────────────────────────────
@@ -103,23 +113,35 @@ async def buscar_estornos(
     usuario: UsuarioAtual,
     db: Client,
 ) -> EstornosResponse:
-    resp_estornos = db.table("estornos") \
-        .select("*") \
-        .gte("competencia_estorno", inicio.isoformat()) \
-        .lte("competencia_estorno", fim.isoformat()) \
-        .order("competencia_estorno", desc=True) \
-        .execute()
+    if _pool():
+        async with conn_as_user(usuario.user_id) as conn:
+            rows = await conn.fetch(
+                "SELECT id, apolice_id, valor, motivo, competencia_original, competencia_estorno "
+                "FROM estornos "
+                "WHERE competencia_estorno >= $1 AND competencia_estorno <= $2 "
+                "ORDER BY competencia_estorno DESC",
+                inicio, fim,
+            )
+            taxa_dados = await conn.fetchval(
+                "SELECT taxa_estorno($1::date, $2::date)",
+                inicio, fim,
+            ) or {}
+            items = [EstornoItem(**dict(r)) for r in rows]
+    else:
+        resp_estornos = db.table("estornos") \
+            .select("*") \
+            .gte("competencia_estorno", inicio.isoformat()) \
+            .lte("competencia_estorno", fim.isoformat()) \
+            .order("competencia_estorno", desc=True) \
+            .execute()
+        taxa_resp = db.rpc("taxa_estorno", {
+            "p_inicio": inicio.isoformat(),
+            "p_fim":    fim.isoformat(),
+        }).execute()
+        taxa_dados = taxa_resp.data or {}
+        items = [EstornoItem(**row) for row in (resp_estornos.data or [])]
 
-    # Calcula taxa via função SQL
-    taxa_resp = db.rpc("taxa_estorno", {
-        "p_inicio": inicio.isoformat(),
-        "p_fim":    fim.isoformat(),
-    }).execute()
-
-    taxa_dados = taxa_resp.data or {}
-    items = [EstornoItem(**row) for row in (resp_estornos.data or [])]
     soma = sum(i.valor for i in items)
-
     return EstornosResponse(
         total=len(items),
         items=items,
@@ -136,12 +158,21 @@ async def buscar_metas(
     usuario: UsuarioAtual,
     db: Client,
 ) -> MetasResponse:
-    resp = db.rpc("atingimento_metas", {
-        "p_competencia": competencia.isoformat(),
-    }).execute()
+    if _pool():
+        async with conn_as_user(usuario.user_id) as conn:
+            result = await conn.fetchval(
+                "SELECT atingimento_metas($1::date)",
+                competencia,
+            ) or []
+            rows = result if isinstance(result, list) else [result]
+    else:
+        resp = db.rpc("atingimento_metas", {
+            "p_competencia": competencia.isoformat(),
+        }).execute()
+        rows = resp.data or []
 
     items = []
-    for row in (resp.data or []):
+    for row in rows:
         if row:
             items.append(MetaItem(
                 meta_id=row["meta_id"],
@@ -166,20 +197,39 @@ async def buscar_repasses(
     db: Client,
     produtor_id: str | None = None,
 ) -> RepassesResponse:
-    query = db.table("repasses") \
-        .select("*") \
-        .gte("competencia", inicio.isoformat()) \
-        .lte("competencia", fim.isoformat())
+    if _pool():
+        async with conn_as_user(usuario.user_id) as conn:
+            if produtor_id:
+                rows = await conn.fetch(
+                    "SELECT id, comissao_id, produtor_id, valor, percentual, "
+                    "competencia, pago_em, status "
+                    "FROM repasses "
+                    "WHERE competencia >= $1 AND competencia <= $2 AND produtor_id = $3 "
+                    "ORDER BY competencia DESC",
+                    inicio, fim, produtor_id,
+                )
+            else:
+                rows = await conn.fetch(
+                    "SELECT id, comissao_id, produtor_id, valor, percentual, "
+                    "competencia, pago_em, status "
+                    "FROM repasses "
+                    "WHERE competencia >= $1 AND competencia <= $2 "
+                    "ORDER BY competencia DESC",
+                    inicio, fim,
+                )
+            items = [RepasseItem(**dict(r)) for r in rows]
+    else:
+        query = db.table("repasses") \
+            .select("*") \
+            .gte("competencia", inicio.isoformat()) \
+            .lte("competencia", fim.isoformat())
+        if produtor_id:
+            query = query.eq("produtor_id", produtor_id)
+        resp = query.order("competencia", desc=True).execute()
+        items = [RepasseItem(**row) for row in (resp.data or [])]
 
-    if produtor_id:
-        query = query.eq("produtor_id", produtor_id)
-
-    resp = query.order("competencia", desc=True).execute()
-
-    items = [RepasseItem(**row) for row in (resp.data or [])]
     soma_previsto = sum(i.valor for i in items if i.status == "previsto")
     soma_pago = sum(i.valor for i in items if i.status == "pago")
-
     return RepassesResponse(
         total=len(items),
         items=items,
@@ -195,14 +245,24 @@ async def buscar_receita_por_ramo(
     fim: date,
     db: Client,
 ) -> ReceitaRamoResponse:
-    resp = db.rpc("receita_por_ramo", {
-        "p_inicio": inicio.isoformat(),
-        "p_fim":    fim.isoformat(),
-    }).execute()
+    if _pool():
+        async with conn_as_user("system") as conn:
+            result = await conn.fetchval(
+                "SELECT receita_por_ramo($1::date, $2::date)",
+                inicio, fim,
+            ) or {}
+            rows = result.get("items", []) if isinstance(result, dict) else (result if isinstance(result, list) else [])
+    else:
+        resp = db.rpc("receita_por_ramo", {
+            "p_inicio": inicio.isoformat(),
+            "p_fim":    fim.isoformat(),
+        }).execute()
+        result = resp.data or {}
+        rows = result.get("items", []) if isinstance(result, dict) else []
 
     items = []
     total = Decimal(0)
-    for row in (resp.data or []):
+    for row in rows:
         if row:
             item = ReceitaRamoItem(
                 ramo_codigo=row["ramo_codigo"],
@@ -238,5 +298,4 @@ async def registrar_auditoria(
             "ip":         ip,
         }).execute()
     except Exception as e:
-        # Falha no log não deve derrubar a requisição
         logger.error("Falha ao registrar audit_log: %s", e)
