@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import cfg
 from app.database import close_asyncpg_pool, init_asyncpg_pool
-from app.routers import chat, comissoes, configuracoes, dre, estornos, lancamentos, metas, repasses
+from app.routers import chat, comissoes, configuracoes, dre, estornos, fechamentos, lancamentos, metas, repasses
 
 logging.basicConfig(
     level=logging.DEBUG if not cfg.is_production else logging.INFO,

@@ -17,8 +17,9 @@ from app.models.schemas import (
     BancoCreate, BancoItem, BancoUpdate,
     CentroCustoCreate, CentroCustoItem, CentroCustoUpdate,
     TipoLancamentoCreate, TipoLancamentoItem, TipoLancamentoUpdate,
+    UsuarioCreate, UsuarioItem, UsuarioUpdate,
 )
-from app.services import financeiro_service
+from app.services import financeiro_service, usuario_service
 from app.services.dre_service import registrar_auditoria
 
 router = APIRouter(prefix="/configuracoes", tags=["Configurações"])
@@ -29,6 +30,14 @@ def _exigir_admin(usuario: UsuarioAtual) -> None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Apenas Admin pode alterar configurações.",
+        )
+
+
+def _exigir_admin_ou_gestor(usuario: UsuarioAtual) -> None:
+    if usuario.role not in ("admin", "gestor"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas Admin ou Gestor pode gerenciar usuários.",
         )
 
 
